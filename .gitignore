@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Environment
+.env
+backend/.env
+frontend/.env
+
+# Build
+dist/
+build/
+frontend/dist/
+
+# System
+.DS_Store
+Thumbs.db
+*.log
+
+# Workspace
+.vscode/
+.idea/
+.gemini/
+scratch/
+backend/scratch/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Credentials & Keys
+*.json
+!package.json
+!package-lock.json
+!backend/package.json
+!backend/package-lock.json
+!frontend/package.json
+!frontend/package-lock.json
+backend/google-drive-key.json
+client_secret*.json

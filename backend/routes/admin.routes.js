@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+const { getAllUsers, getUserDetail, verifyUser, getStats, getActivityLogs, generateCompiledPdf, syncCompiledPdfToDrive } = require('../controllers/admin.controller');
+const { protect, authorize } = require('../middleware/auth.middleware');
+
+router.use(protect, authorize('admin'));
+router.get('/stats', getStats);
+router.get('/users', getAllUsers);
+router.get('/user/:id', getUserDetail);
+router.put('/verify/:id', verifyUser);
+router.get('/activity-logs', getActivityLogs);
+router.post('/compile-pdf/:id', generateCompiledPdf);
+router.post('/sync-drive/:id', syncCompiledPdfToDrive);
+
+module.exports = router;
