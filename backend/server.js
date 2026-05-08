@@ -18,6 +18,9 @@ const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
+// Trust Proxy (Required for Render/Vercel load balancers)
+app.set('trust proxy', 1);
+
 // Absolute Root Route (for health checks)
 app.all('/', (req, res) => res.json({ 
   success: true, 

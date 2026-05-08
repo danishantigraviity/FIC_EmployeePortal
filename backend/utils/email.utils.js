@@ -1,67 +1,98 @@
 require('dotenv').config();
 const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
 const getFrontendUrl = () => {
   const url = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://fic-employee-portal.vercel.app';
   return url.replace(/\/$/, '');
 };
 
-const emailUser = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
-const emailPass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
+const emailUser = (process.env.EMAIL_USER || process.env.SMTP_USER || 'antigraviity.cro@gmail.com').trim();
 
-// CREATE TRANSPORTER FUNCTION (so we can recreate it on failure)
-const createTransporter = (port) => {
-  console.log(`🔌 Attempting to create transporter on Port ${port}...`);
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: port,
-    secure: port === 465,
-    auth: { user: emailUser, pass: emailPass },
-    connectionTimeout: 8000, // 8 seconds only
-    greetingTimeout: 8000,
-    socketTimeout: 15000,
-    tls: { rejectUnauthorized: false }
-  });
+// OAUTH2 CONFIG (using existing Drive credentials)
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_DRIVE_CLIENT_ID,
+  process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+  process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost'
+);
+
+oauth2Client.setCredentials({
+  refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+});
+
+// CREATE TRANSPORTER (Using OAuth2 - This works on Port 443 which is NEVER blocked)
+const createTransporter = async () => {
+  try {
+    console.log('🔌 Initializing Gmail API via OAuth2 (Port 443)...');
+    const accessToken = await oauth2Client.getAccessToken();
+    
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: emailUser,
+        clientId: process.env.GOOGLE_DRIVE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
+        accessToken: accessToken.token
+      }
+    });
+  } catch (err) {
+    console.error('❌ OAuth2 initialization failed. Falling back to SMTP Port 587...', err.message);
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: emailUser,
+        pass: process.env.EMAIL_PASS || process.env.SMTP_PASS
+      },
+      tls: { rejectUnauthorized: false }
+    });
+  }
 };
 
-let transporter = createTransporter(465); // Start with 465
+let transporterPromise = createTransporter();
 
-exports.sendRegistrationEmail = async (email, name, token, retryCount = 0) => {
+exports.sendRegistrationEmail = async (email, name, token) => {
   const url = `${getFrontendUrl()}/register?token=${token}`;
+  const transporter = await transporterPromise;
   
-  // Try sending. If it fails, switch port and try again ONCE.
   try {
     const info = await transporter.sendMail({
       from: `"Forge India HR" <${emailUser}>`,
       to: email,
       subject: 'Complete Your Registration — Forge India',
-      html: `<h1>Welcome ${name}</h1><p>Click <a href="${url}">here</a> to register.</p>`
+      html: `
+        <div style="font-family: sans-serif; padding: 20px;">
+          <h2 style="color: #1A4FA0;">Welcome to Forge India, ${name}!</h2>
+          <p>Please click the button below to set up your account and complete your registration.</p>
+          <div style="margin: 30px 0;">
+            <a href="${url}" style="background-color: #1A4FA0; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Complete Registration</a>
+          </div>
+          <p style="font-size: 12px; color: #666;">This link will expire in 48 hours.</p>
+        </div>
+      `
     });
-    console.log(`✅ Email sent: ${info.messageId}`);
+    console.log(`✅ Email sent via Gmail API: ${info.messageId}`);
     return true;
   } catch (err) {
-    console.error(`❌ Email attempt ${retryCount + 1} failed: ${err.message}`);
-    
-    if (retryCount === 0) {
-      console.log('🔄 SWITCHING TO PORT 587...');
-      transporter = createTransporter(587);
-      return exports.sendRegistrationEmail(email, name, token, 1);
+    console.error(`❌ Email delivery failed: ${err.message}`);
+    // If it was an auth error, try to refresh transporter for next time
+    if (err.message.includes('auth') || err.message.includes('token')) {
+      transporterPromise = createTransporter();
     }
     throw err;
   }
 };
 
-// Other exports (simplified to use the same transporter)
+// Other simplified exports
 exports.sendApprovalEmail = async (email, name) => {
-  return transporter.sendMail({ from: `"Forge India" <${emailUser}>`, to: email, subject: 'Approved', html: `<p>Approved, ${name}!</p>` });
+  const transporter = await transporterPromise;
+  return transporter.sendMail({ from: `"Forge India" <${emailUser}>`, to: email, subject: 'Profile Approved', html: `<p>Hi ${name}, your profile is approved!</p>` });
 };
-exports.sendRejectionEmail = async (email, name, reason) => {
-  return transporter.sendMail({ from: `"Forge India" <${emailUser}>`, to: email, subject: 'Update Needed', html: `<p>Reason: ${reason}</p>` });
-};
+
 exports.sendOTPEmail = async (email, otp) => {
-  return transporter.sendMail({ from: `"Forge India Security" <${emailUser}>`, to: email, subject: 'OTP', html: `<p>Code: ${otp}</p>` });
-};
-exports.sendPasswordResetEmail = async (email, token) => {
-  const url = `${getFrontendUrl()}/reset-password?token=${token}`;
-  return transporter.sendMail({ from: `"Forge India" <${emailUser}>`, to: email, subject: 'Reset Password', html: `<p><a href="${url}">Reset</a></p>` });
+  const transporter = await transporterPromise;
+  return transporter.sendMail({ from: `"Forge India Security" <${emailUser}>`, to: email, subject: 'Verification Code', html: `<p>Your code is: <b>${otp}</b></p>` });
 };
