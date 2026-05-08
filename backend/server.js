@@ -15,16 +15,6 @@ const experienceRoutes = require('./routes/experience.routes');
 const documentRoutes = require('./routes/document.routes');
 const adminRoutes = require('./routes/admin.routes');
 
-// Environment Variable Validation
-const requiredEnv = [
-  'MONGODB_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS', 'CLIENT_URL'
-];
-requiredEnv.forEach(env => {
-  if (!process.env[env]) {
-    console.error(`❌ CRITICAL: Environment variable ${env} is missing!`);
-    if (process.env.NODE_ENV === 'production') process.exit(1);
-  }
-});
 
 const app = express();
 
