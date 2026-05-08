@@ -20,10 +20,12 @@ const transporterConfig = {
     user: emailUser,
     pass: emailPass
   },
-  // Adding timeouts to prevent hanging in production environments
-  connectionTimeout: 10000, // 10 seconds
+  connectionTimeout: 10000,
   greetingTimeout: 10000,
-  socketTimeout: 30000, // 30 seconds
+  socketTimeout: 30000,
+  tls: {
+    rejectUnauthorized: false
+  }
 };
 
 const transporter = nodemailer.createTransport(transporterConfig);
