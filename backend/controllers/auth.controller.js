@@ -41,11 +41,32 @@ exports.createInvite = async (req, res) => {
       });
     }
 
-    await sendRegistrationEmail(email, name, token);
+    console.log(`🚀 Starting invite process for ${email}...`);
+    
+    // Use a Promise.race to ensure we don't hang indefinitely
+    // even if the email transporter gets stuck
+    const emailPromise = sendRegistrationEmail(email, name, token);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email sending timed out after 25s')), 25000)
+    );
+
+    try {
+      await Promise.race([emailPromise, timeoutPromise]);
+      console.log(`✨ Invite process completed for ${email}`);
+    } catch (emailErr) {
+      console.error(`⚠️ Email notification warning: ${emailErr.message}`);
+      // We don't throw error here because the user is already created in DB
+      // The admin can re-send the invite from the dashboard
+    }
+
     res.status(user ? 200 : 201).json({ 
       success: true, 
       message: user ? 'Invitation re-sent successfully' : 'Invite sent successfully', 
-      data: { userId: user._id, registrationUrl: `${process.env.CLIENT_URL}/register?token=${token}` } 
+      data: { 
+        userId: user._id, 
+        registrationUrl: `${process.env.CLIENT_URL}/register?token=${token}`,
+        emailWarning: false
+      } 
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

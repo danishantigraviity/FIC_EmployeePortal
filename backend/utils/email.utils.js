@@ -2,26 +2,40 @@ require('dotenv').config();
 const nodemailer = require('nodemailer');
 
 // Use EMAIL_USER/PASS as primary, fallback to SMTP_USER/PASS
-const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
-const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+const emailUser = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
+const emailPass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
+
+if (!emailUser || !emailPass) {
+  console.warn('⚠️ EMAIL_USER or EMAIL_PASS is missing in .env. Emails may not send.');
+}
 
 const transporterConfig = {
-  service: 'gmail',
-  pool: true,
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // true for 465, false for other ports
+  pool: true, // Use connection pooling
+  maxConnections: 5,
+  maxMessages: 100,
   auth: {
     user: emailUser,
     pass: emailPass
-  }
+  },
+  // Adding timeouts to prevent hanging in production environments
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 30000, // 30 seconds
 };
 
 const transporter = nodemailer.createTransport(transporterConfig);
 
-// Verify connection on startup
+// Verify connection on startup with improved logging
+console.log(`🔌 Verifying email transporter (${transporterConfig.host}:${transporterConfig.port})...`);
 transporter.verify((error, success) => {
   if (error) {
     console.error('❌ Email transporter error:', error.message);
+    console.error('👉 Tip: Ensure EMAIL_USER/PASS are correct and App Passwords are enabled for Gmail.');
   } else {
-    console.log('✅ Email transporter ready to send messages');
+    console.log(`✅ Email transporter ready (${emailUser})`);
   }
 });
 
@@ -55,14 +69,28 @@ const getHtmlTemplate = (title, content, buttonLabel = '', buttonUrl = '') => `
   </div>
 `;
 
-// Shared attachments configuration
-const attachments = [{
-  filename: 'logo.png',
-  path: 'c:/Users/PC/Desktop/FIC-main/frontend/src/assets/FIC.png',
-  cid: 'companyLogo'
-}];
+const fs = require('fs');
+const path = require('path');
+
+// Helper to get attachments safely
+const getAttachments = () => {
+  const logoPath = path.join(__dirname, '../assets/logo.png');
+  try {
+    if (fs.existsSync(logoPath)) {
+      return [{
+        filename: 'logo.png',
+        path: logoPath,
+        cid: 'companyLogo'
+      }];
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not find logo attachment, sending email without it.');
+  }
+  return [];
+};
 
 exports.sendRegistrationEmail = async (email, name, token) => {
+  console.log(`📧 Attempting to send registration email to: ${email}`);
   const url = `${process.env.CLIENT_URL}/register?token=${token}`;
   const html = getHtmlTemplate(
     `Welcome to the Team, ${name}!`,
@@ -72,13 +100,20 @@ exports.sendRegistrationEmail = async (email, name, token) => {
     url
   );
 
-  return transporter.sendMail({
-    from: `"Forge India HR" <${emailUser}>`,
-    to: email,
-    subject: 'Welcome to Forge India — Complete Your Registration',
-    html,
-    attachments
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: `"Forge India HR" <${emailUser}>`,
+      to: email,
+      subject: 'Welcome to Forge India — Complete Your Registration',
+      html,
+      attachments: getAttachments()
+    });
+    console.log(`✅ Registration email sent to ${email}. MessageId: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    console.error(`❌ Failed to send registration email to ${email}:`, err.message);
+    throw err;
+  }
 };
 
 exports.sendApprovalEmail = async (email, name) => {
@@ -96,7 +131,7 @@ exports.sendApprovalEmail = async (email, name) => {
     to: email,
     subject: 'Your Profile Has Been Approved — Forge India',
     html,
-    attachments
+    attachments: getAttachments()
   });
 };
 
@@ -118,7 +153,7 @@ exports.sendRejectionEmail = async (email, name, reason) => {
     to: email,
     subject: 'Profile Verification Update Required — Forge India',
     html,
-    attachments
+    attachments: getAttachments()
   });
 };
 
@@ -137,7 +172,7 @@ exports.sendOTPEmail = async (email, otp) => {
     to: email,
     subject: `Your Verification Code: ${otp}`,
     html,
-    attachments
+    attachments: getAttachments()
   });
 };
 
@@ -156,7 +191,7 @@ exports.sendPdfReadyEmail = async (email, name) => {
     to: email,
     subject: 'Onboarding Documents Ready — Forge India',
     html,
-    attachments
+    attachments: getAttachments()
   });
 };
 
@@ -175,7 +210,7 @@ exports.sendDriveSyncEmail = async (email, name, driveLink) => {
     to: email,
     subject: 'Document Backup Successful — Forge India',
     html,
-    attachments
+    attachments: getAttachments()
   });
 };
 
@@ -194,6 +229,6 @@ exports.sendPasswordResetEmail = async (email, token) => {
     to: email,
     subject: 'Password Reset Request — Forge India',
     html,
-    attachments
+    attachments: getAttachments()
   });
 };
