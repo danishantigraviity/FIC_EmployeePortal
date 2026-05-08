@@ -13,7 +13,7 @@ exports.schemas = {
   register: Joi.object({
     name: Joi.string().min(2).max(100).required(),
     email: Joi.string().email().required(),
-    phone: Joi.string().pattern(/^[6-9]\d{9}$/).required().messages({ 'string.pattern.base': 'Enter valid 10-digit Indian phone' }),
+    phone: Joi.string().pattern(/^[0-9]\d{9,12}$/).required().messages({ 'string.pattern.base': 'Enter valid phone number' }),
     password: Joi.string().min(8).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).required()
       .messages({ 'string.pattern.base': 'Password must have uppercase, lowercase and number' }),
     confirmPassword: Joi.any().valid(Joi.ref('password')).required().messages({ 'any.only': 'Passwords do not match' }),
