@@ -41,27 +41,18 @@ exports.createInvite = async (req, res) => {
       });
     }
 
-    console.log(`🚀 Starting invite process for ${email}...`);
+    // NON-BLOCKING BACKGROUND EMAIL
+    // We return success to the admin immediately, while sending the email in the background.
+    console.log(`🚀 Triggering background invite email for ${email}...`);
     
-    // Use a Promise.race to ensure we don't hang indefinitely
-    // even if the email transporter gets stuck
-    const emailPromise = sendRegistrationEmail(email, name, token);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Email sending timed out after 25s')), 25000)
-    );
+    sendRegistrationEmail(email, name, token).catch(err => {
+      console.error(`❌ Background Email Error for ${email}:`, err.message);
+      // In a real production app, we might log this to a DB or notification service
+    });
 
-    try {
-      await Promise.race([emailPromise, timeoutPromise]);
-      console.log(`✨ Invite process completed for ${email}`);
-    } catch (emailErr) {
-      console.error(`⚠️ Email notification warning: ${emailErr.message}`);
-      // We don't throw error here because the user is already created in DB
-      // The admin can re-send the invite from the dashboard
-    }
-
-    res.status(user ? 200 : 201).json({ 
-      success: true, 
-      message: user ? 'Invitation re-sent successfully' : 'Invite sent successfully', 
+    res.status(200).json({
+      success: true,
+      message: 'Invitation generated successfully. Email is being sent in the background.',
       data: { 
         userId: user._id, 
         registrationUrl: `${process.env.CLIENT_URL}/register?token=${token}`,
