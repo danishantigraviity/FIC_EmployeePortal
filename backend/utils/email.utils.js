@@ -1,7 +1,14 @@
 require('dotenv').config();
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
-// Use EMAIL_USER/PASS as primary, fallback to SMTP_USER/PASS
+// Robust Frontend URL detection with production fallback
+const getFrontendUrl = () => {
+  const url = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://fic-employee-portal.vercel.app';
+  return url.replace(/\/$/, ''); // Remove trailing slash
+};
+
 const emailUser = (process.env.EMAIL_USER || process.env.SMTP_USER || '').trim();
 const emailPass = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
 
@@ -12,8 +19,8 @@ if (!emailUser || !emailPass) {
 const transporterConfig = {
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // true for 465, false for other ports
-  pool: true, // Use connection pooling
+  secure: true, // true for 465
+  pool: true,
   maxConnections: 5,
   maxMessages: 100,
   auth: {
@@ -30,12 +37,11 @@ const transporterConfig = {
 
 const transporter = nodemailer.createTransport(transporterConfig);
 
-// Verify connection on startup with improved logging
+// Verify connection on startup
 console.log(`🔌 Verifying email transporter (${transporterConfig.host}:${transporterConfig.port})...`);
-transporter.verify((error, success) => {
+transporter.verify((error) => {
   if (error) {
     console.error('❌ Email transporter error:', error.message);
-    console.error('👉 Tip: Ensure EMAIL_USER/PASS are correct and App Passwords are enabled for Gmail.');
   } else {
     console.log(`✅ Email transporter ready (${emailUser})`);
   }
@@ -45,7 +51,7 @@ transporter.verify((error, success) => {
 const getHtmlTemplate = (title, content, buttonLabel = '', buttonUrl = '') => `
   <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 20px auto; border: 1px solid #e1e4e8; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
     <div style="background: linear-gradient(135deg, #1A4FA0 0%, #163d7a 100%); background-color: #1A4FA0; padding: 35px 20px; text-align: center; border-bottom: 4px solid #F5C518;">
-      <img src="cid:companyLogo" alt="Forge India Logo" role="presentation" border="0" style="width: 220px; height: auto; display: block; margin: 0 auto; max-width: 85%; pointer-events: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;" />
+      <img src="cid:companyLogo" alt="Forge India Logo" role="presentation" border="0" style="width: 220px; height: auto; display: block; margin: 0 auto; max-width: 85%;" />
       <div style="margin-top: 15px; color: #ffffff; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; font-weight: 600; opacity: 0.9;">
         Employee Onboarding Portal
       </div>
@@ -57,7 +63,7 @@ const getHtmlTemplate = (title, content, buttonLabel = '', buttonUrl = '') => `
       </div>
       ${buttonLabel && buttonUrl ? `
         <div style="text-align: center; margin-top: 45px;">
-          <a href="${buttonUrl}" style="display: inline-block; padding: 18px 36px; background-color: #1A4FA0; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px; transition: all 0.2s ease;">${buttonLabel}</a>
+          <a href="${buttonUrl}" style="display: inline-block; padding: 18px 36px; background-color: #1A4FA0; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px;">${buttonLabel}</a>
         </div>
       ` : ''}
     </div>
@@ -71,9 +77,6 @@ const getHtmlTemplate = (title, content, buttonLabel = '', buttonUrl = '') => `
   </div>
 `;
 
-const fs = require('fs');
-const path = require('path');
-
 // Helper to get attachments safely
 const getAttachments = () => {
   const logoPath = path.join(__dirname, '../assets/logo.png');
@@ -86,14 +89,17 @@ const getAttachments = () => {
       }];
     }
   } catch (err) {
-    console.warn('⚠️ Could not find logo attachment, sending email without it.');
+    console.warn('⚠️ Could not find logo attachment');
   }
   return [];
 };
 
-exports.sendRegistrationEmail = async (email, name, token) => {
-  console.log(`📧 Attempting to send registration email to: ${email}`);
-  const url = `${process.env.CLIENT_URL}/register?token=${token}`;
+// --- EMAIL FUNCTIONS ---
+
+exports.sendRegistrationEmail = async (email, name, token, retryCount = 0) => {
+  console.log(`📧 Attempting to send registration email to: ${email} (Attempt ${retryCount + 1})`);
+  const frontendUrl = getFrontendUrl();
+  const url = `${frontendUrl}/register?token=${token}`;
   const html = getHtmlTemplate(
     `Welcome to the Team, ${name}!`,
     `<p>You have been invited to join the Forge India Employee Portal. To begin your onboarding journey, please click the button below to complete your registration and set up your account profile.</p>
@@ -103,17 +109,23 @@ exports.sendRegistrationEmail = async (email, name, token) => {
   );
 
   try {
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: `"Forge India HR" <${emailUser}>`,
       to: email,
       subject: 'Welcome to Forge India — Complete Your Registration',
       html,
       attachments: getAttachments()
-    });
-    console.log(`✅ Registration email sent to ${email}. MessageId: ${info.messageId}`);
-    return info;
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Registration email dispatched: ${info.messageId}`);
+    return true;
   } catch (err) {
-    console.error(`❌ Failed to send registration email to ${email}:`, err.message);
+    console.error(`❌ Email failed for ${email}:`, err.message);
+    if (retryCount < 2) {
+      console.log(`🔄 Retrying in 3 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      return exports.sendRegistrationEmail(email, name, token, retryCount + 1);
+    }
     throw err;
   }
 };
@@ -122,10 +134,9 @@ exports.sendApprovalEmail = async (email, name) => {
   const html = getHtmlTemplate(
     'Profile Approved!',
     `<p>Dear ${name},</p>
-     <p>We are pleased to inform you that your onboarding profile has been successfully verified and <strong>approved</strong> by the HR department.</p>
-     <p>You can now access your full dashboard and view your generated appointment documents.</p>`,
+     <p>Your onboarding profile has been successfully verified and <strong>approved</strong>.</p>`,
     'Go to Dashboard',
-    `${process.env.CLIENT_URL}/dashboard`
+    `${getFrontendUrl()}/dashboard`
   );
 
   return transporter.sendMail({
@@ -141,13 +152,12 @@ exports.sendRejectionEmail = async (email, name, reason) => {
   const html = getHtmlTemplate(
     'Action Required: Profile Update',
     `<p>Dear ${name},</p>
-     <p>Your onboarding profile has been reviewed and requires some updates before it can be approved.</p>
-     <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545; color: #721c24;">
-       <strong>Reason for rejection:</strong><br>${reason}
-     </div>
-     <p style="margin-top: 20px;">Please log in to your portal and update the requested information so we can proceed with your onboarding.</p>`,
+     <p>Your profile requires updates before approval:</p>
+     <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+       <strong>Reason:</strong><br>${reason}
+     </div>`,
     'Update Profile',
-    `${process.env.CLIENT_URL}/profile`
+    `${getFrontendUrl()}/profile`
   );
 
   return transporter.sendMail({
@@ -159,33 +169,13 @@ exports.sendRejectionEmail = async (email, name, reason) => {
   });
 };
 
-exports.sendOTPEmail = async (email, otp) => {
-  const html = getHtmlTemplate(
-    'Verification Code',
-    `<p>Use the following One-Time Password (OTP) to complete your verification process. This code is valid for 10 minutes.</p>
-     <div style="text-align: center; margin: 30px 0;">
-       <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1A4FA0; background: #f0f4f8; padding: 10px 30px; border-radius: 12px; border: 1px dashed #1A4FA0;">${otp}</span>
-     </div>
-     <p>If you did not request this code, please secure your account immediately.</p>`
-  );
-
-  return transporter.sendMail({
-    from: `"Forge India Security" <${emailUser}>`,
-    to: email,
-    subject: `Your Verification Code: ${otp}`,
-    html,
-    attachments: getAttachments()
-  });
-};
-
 exports.sendPdfReadyEmail = async (email, name) => {
   const html = getHtmlTemplate(
-    'Documents Ready for Download',
+    'Documents Ready',
     `<p>Dear ${name},</p>
-     <p>Your compiled onboarding document package has been successfully generated and is now ready for your review.</p>
-     <p>The package includes your signed Appointment Letter, NDA, and other essential onboarding forms merged into a single secure PDF.</p>`,
+     <p>Your compiled onboarding document package is now ready for download.</p>`,
     'Download PDF',
-    `${process.env.CLIENT_URL}/dashboard`
+    `${getFrontendUrl()}/dashboard`
   );
 
   return transporter.sendMail({
@@ -199,11 +189,10 @@ exports.sendPdfReadyEmail = async (email, name) => {
 
 exports.sendDriveSyncEmail = async (email, name, driveLink) => {
   const html = getHtmlTemplate(
-    'Secure Cloud Backup Completed',
+    'Cloud Backup Completed',
     `<p>Dear ${name},</p>
-     <p>Your onboarding documents have been successfully synchronized to our secure Google Drive storage.</p>
-     <p>You can access a permanent cloud copy of your documents using the button below.</p>`,
-    'View in Google Drive',
+     <p>Your documents have been successfully synced to Google Drive.</p>`,
+    'View in Drive',
     driveLink
   );
 
@@ -217,11 +206,10 @@ exports.sendDriveSyncEmail = async (email, name, driveLink) => {
 };
 
 exports.sendPasswordResetEmail = async (email, token) => {
-  const url = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
+  const url = `${getFrontendUrl()}/reset-password?token=${token}`;
   const html = getHtmlTemplate(
-    'Password Reset Request',
-    `<p>We received a request to reset your password for the Forge India portal.</p>
-     <p>Click the button below to choose a new password. This link will expire in 1 hour.</p>`,
+    'Password Reset',
+    `<p>Click below to reset your password. Valid for 1 hour.</p>`,
     'Reset Password',
     url
   );
