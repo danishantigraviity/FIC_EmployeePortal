@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -47,6 +48,11 @@ api.interceptors.response.use(
         return Promise.reject(refreshErr);
       } finally { isRefreshing = false; }
     }
+    if (err.response?.status === 500) {
+      toast.error('Server error. Please try again later.');
+    } else if (err.code === 'ECONNABORTED' || !err.response) {
+      toast.error('Network error. Please check your connection.');
+    }
     return Promise.reject(err);
   }
 );
@@ -63,6 +69,7 @@ export const authAPI = {
 export const profileAPI = {
   get: () => api.get('/profile'),
   save: (data) => api.post('/profile', data),
+  submit: () => api.post('/profile/submit'),
 };
 
 export const educationAPI = {

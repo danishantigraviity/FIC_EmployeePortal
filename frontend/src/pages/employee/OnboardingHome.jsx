@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { profileAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 
 const STEPS = [
   {
@@ -48,9 +51,25 @@ const STATUS_CONFIG = {
 };
 
 export default function OnboardingHome() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const completion = user?.profileCompletion || 0;
   const status = STATUS_CONFIG[user?.status] || STATUS_CONFIG.registered;
+
+  const handleSubmit = async () => {
+    if (completion < 100) return toast.error('Please complete all steps to 100% first');
+    
+    setSubmitting(true);
+    try {
+      const { data } = await profileAPI.submit();
+      updateUser({ status: data.status });
+      toast.success('Profile submitted successfully!');
+    } catch (err) {
+      // Global handler takes care of toast
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-10">
@@ -222,12 +241,22 @@ export default function OnboardingHome() {
                 Ensure all sections are complete. You can submit your profile for final HR approval once you reach 100%.
               </p>
             </div>
-            <button className={`relative z-10 px-8 py-3 rounded-2xl text-sm font-bold transition-all shadow-xl ${
+            <button 
+              onClick={handleSubmit}
+              disabled={completion < 100 || submitting}
+              className={`relative z-10 px-8 py-3 rounded-2xl text-sm font-bold transition-all shadow-xl flex items-center gap-3 ${
               completion === 100 
                 ? 'bg-yellow-400 text-blue-900 hover:scale-105 active:scale-95' 
                 : 'bg-slate-800 text-slate-500 cursor-not-allowed'
             }`}>
-              Submit for Review
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-blue-900/30 border-t-blue-900 rounded-full animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                'Submit for Review'
+              )}
             </button>
           </div>
         )}

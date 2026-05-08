@@ -95,8 +95,9 @@ app.use('/api/admin', adminRoutes);
 // Root route for Render health checks and verification
 app.get('/', (req, res) => res.json({ 
   success: true, 
-  message: 'Forge India Employee Portal API is live',
-  version: '1.1.0',
+  message: 'Forge India Employee Portal Production API is live',
+  status: 'online',
+  timestamp: new Date().toISOString(),
   docs: 'https://fic-iyyd.onrender.com/health'
 }));
 

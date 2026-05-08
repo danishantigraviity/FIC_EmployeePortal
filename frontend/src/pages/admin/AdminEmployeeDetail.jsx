@@ -52,9 +52,6 @@ export default function AdminEmployeeDetail() {
       toast.loading('Merging documents into high-quality PDF...', { id: toastId });
       const { data } = await adminAPI.compilePdf(id);
       
-      toast.loading('Uploading backup to Google Drive...', { id: toastId });
-      // The backend handles the upload, so we just wait for the response
-      
       setDetail(prev => ({ 
         ...prev, 
         docs: { ...prev.docs, compiledPdf: data.data } 
@@ -66,7 +63,7 @@ export default function AdminEmployeeDetail() {
       if (data.data.url) {
         const link = document.createElement('a');
         link.href = data.data.url;
-        link.download = `compiled_docs_${user.name?.replace(/\s+/g, '_')}.pdf`;
+        link.download = `compiled_docs_${detail.user.name?.replace(/\s+/g, '_')}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
