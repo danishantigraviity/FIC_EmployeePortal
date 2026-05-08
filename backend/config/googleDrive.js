@@ -8,7 +8,7 @@ try {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_DRIVE_CLIENT_ID,
     process.env.GOOGLE_DRIVE_CLIENT_SECRET,
-    process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost:3000'
+    process.env.GOOGLE_DRIVE_REDIRECT_URI || process.env.CLIENT_URL || 'http://localhost'
   );
 
   if (process.env.GOOGLE_DRIVE_REFRESH_TOKEN) {

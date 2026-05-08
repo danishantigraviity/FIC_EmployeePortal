@@ -25,7 +25,7 @@ const seedEmployee = async () => {
     }
 
     console.log('\n--- DUMMY PORTAL ACCESS ---');
-    console.log('Link: http://localhost:5173/login');
+    console.log(`Link: ${process.env.CLIENT_URL || 'http://localhost:5173'}/login`);
     console.log('Email: employee@fic.com');
     console.log('Password: employee123');
     console.log('----------------------------\n');
