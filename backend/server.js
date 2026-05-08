@@ -39,7 +39,8 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:5173',
   'https://fic-i2mw.vercel.app',
-  'https://fic-employee.vercel.app'
+  'https://fic-employee.vercel.app',
+  'https://fic-employee-portal.vercel.app'
 ].filter(Boolean);
 
 app.use(cors({
