@@ -74,6 +74,15 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Root route for Render health checks and verification
+app.all('/', (req, res) => res.json({ 
+  success: true, 
+  message: 'Forge India Employee Portal Production API is live',
+  status: 'online',
+  timestamp: new Date().toISOString(),
+  docs: 'https://fic-iyyd.onrender.com/health'
+}));
+
 // Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/profile', profileRoutes);
@@ -82,14 +91,6 @@ app.use('/api/experience', experienceRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Root route for Render health checks and verification
-app.get('/', (req, res) => res.json({ 
-  success: true, 
-  message: 'Forge India Employee Portal Production API is live',
-  status: 'online',
-  timestamp: new Date().toISOString(),
-  docs: 'https://fic-iyyd.onrender.com/health'
-}));
 
 // Health check
 app.get('/health', (req, res) => res.json({ 
