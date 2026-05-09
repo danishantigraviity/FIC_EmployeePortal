@@ -65,7 +65,18 @@ export default function ExperiencePage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); 
     setLoading(true);
-    const payload = { ...form, skills: form.skills ? (Array.isArray(form.skills) ? form.skills : form.skills.split(',').map(s => s.trim())) : [] };
+    const cleanedForm = {
+      ...form,
+      companyName: form.companyName.trim(),
+      role: form.role.trim()
+    };
+    
+    if (!form.isCurrent && parseInt(form.endYear) < parseInt(form.startYear)) {
+      setLoading(false);
+      return toast.error('End year cannot be earlier than start year');
+    }
+
+    const payload = { ...cleanedForm, skills: form.skills ? (Array.isArray(form.skills) ? form.skills : form.skills.split(',').map(s => s.trim())) : [] };
     try {
       if (editId) {
         const { data } = await experienceAPI.update(editId, payload);

@@ -44,8 +44,14 @@ export default function EducationPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      const cleanedForm = {
+        ...form,
+        college: form.college.trim(),
+        university: form.university.trim(),
+        degree: form.degree.trim()
+      };
       if (editId) {
-        const { data } = await educationAPI.update(editId, form);
+        const { data } = await educationAPI.update(editId, cleanedForm);
         setList(l => l.map(x => x._id === editId ? data.data : x));
         updateUser({ 
           profileCompletion: data.profileCompletion,
@@ -53,7 +59,7 @@ export default function EducationPage() {
         });
         toast.success('Qualification updated');
       } else {
-        const { data } = await educationAPI.add(form);
+        const { data } = await educationAPI.add(cleanedForm);
         setList(l => [data.data, ...l]);
         updateUser({ 
           profileCompletion: data.profileCompletion,

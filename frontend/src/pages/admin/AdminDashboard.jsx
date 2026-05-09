@@ -107,6 +107,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDownload = async (userId, userName) => {
+    const tid = toast.loading('Retrieving employee dossier...');
+    try {
+      const response = await adminAPI.downloadPdf(userId);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `dossier_${userName.replace(/\s+/g, '_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Dossier downloaded', { id: tid });
+    } catch (err) {
+      toast.error('Dossier not found or compilation failed', { id: tid });
+    }
+  };
+
   const filtered = users.filter(u => {
     const q = filters.search.toLowerCase();
     const matchSearch = !q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.department?.toLowerCase().includes(q);
@@ -241,6 +258,18 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {u.status === 'approved' && (
+                              <button 
+                                onClick={() => handleDownload(u._id, u.name)}
+                                className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                title="Download Dossier"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 11l3 3m0 0l3-3m-3 3V8" />
+                                </svg>
+                              </button>
+                            )}
                             <Link to={`/admin/employees/${u._id}`}
                               className="inline-flex items-center gap-1 text-xs px-4 py-2 rounded-xl font-bold transition-all bg-gray-50 text-gray-600 hover:bg-blue-600 hover:text-white shadow-sm"
                             >
