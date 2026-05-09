@@ -208,3 +208,59 @@ exports.syncCompiledPdfToDrive = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+exports.downloadCompiledPdf = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const docs = await Document.findOne({ userId: id });
+
+    if (!docs || !docs.compiledPdf) {
+      return res.status(404).json({ success: false, message: 'No compiled PDF found for this employee.' });
+    }
+
+    const { url, driveId, driveViewLink } = docs.compiledPdf;
+
+    // Build a safe filename from the employee's name
+    const user = await User.findById(id).select('name');
+    const safeName = (user?.name || 'employee').replace(/\s+/g, '_');
+    const fileName = `compiled_docs_${safeName}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+
+    // Strategy 1: Stream directly from Google Drive (most reliable)
+    if (driveId) {
+      console.log(`📥 Streaming PDF from Google Drive. ID: ${driveId}`);
+      try {
+        const fileBuffer = await driveService.downloadFromDrive(driveId);
+        return res.send(fileBuffer);
+      } catch (driveErr) {
+        console.warn('⚠️ Drive stream failed, trying local fallback:', driveErr.message);
+      }
+    }
+
+    // Strategy 2: Serve from local filesystem
+    if (url && !url.startsWith('http')) {
+      const pathLib = require('path');
+      const fs = require('fs');
+      const localPath = pathLib.join(__dirname, '../', url.replace(/^\//, ''));
+      if (fs.existsSync(localPath)) {
+        console.log(`📥 Serving PDF from local storage: ${localPath}`);
+        return res.sendFile(localPath);
+      }
+    }
+
+    // Strategy 3: Redirect to Drive view link as last resort
+    if (driveViewLink) {
+      console.log('↪️ Redirecting to Google Drive view link as fallback.');
+      return res.redirect(driveViewLink);
+    }
+
+    return res.status(404).json({ success: false, message: 'PDF file not found in storage or Drive.' });
+
+  } catch (err) {
+    console.error('🔥 PDF Download Failed:', err.message);
+    res.status(500).json({ success: false, message: 'Failed to download PDF: ' + err.message });
+  }
+};

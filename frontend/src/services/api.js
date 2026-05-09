@@ -112,6 +112,7 @@ export const adminAPI = {
   compilePdf: (id) => api.post(`/admin/compile-pdf/${id}`),
   syncDrive: (id) => api.post(`/admin/sync-drive/${id}`),
   getActivityLogs: () => api.get('/admin/activity-logs'),
+  downloadPdf: (id) => api.get(`/admin/download-pdf/${id}`, { responseType: 'blob' }),
 };
 
 export default api;

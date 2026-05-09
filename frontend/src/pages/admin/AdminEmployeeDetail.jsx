@@ -23,6 +23,7 @@ export default function AdminEmployeeDetail() {
   const [reason, setReason] = useState('');
   const [isCompiling, setIsCompiling] = useState(false);
   const [isSyncingDrive, setIsSyncingDrive] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     adminAPI.getUserDetail(id)
@@ -93,6 +94,29 @@ export default function AdminEmployeeDetail() {
       toast.error(err.response?.data?.message || 'Drive synchronization failed', { id: toastId });
     } finally {
       setIsSyncingDrive(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    const toastId = toast.loading('Preparing your dossier for download...');
+    try {
+      const response = await adminAPI.downloadPdf(id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `compiled_docs_${detail?.user?.name?.replace(/\s+/g, '_') || id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      toast.success('Dossier downloaded successfully!', { id: toastId });
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Download failed. Please try again.';
+      toast.error(msg, { id: toastId });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -413,11 +437,26 @@ export default function AdminEmployeeDetail() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <a href={docs.compiledPdf.url} 
-                        target="_blank" rel="noopener noreferrer" 
-                        className="w-full py-3.5 bg-white border border-blue-100 text-blue-700 rounded-2xl text-[11px] font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm">
-                        View & Download Dossier
-                      </a>
+                      <button
+                        onClick={handleDownload}
+                        disabled={isDownloading}
+                        className={`w-full py-3.5 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm border ${
+                          isDownloading
+                            ? 'bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white border-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white'
+                        }`}
+                      >
+                        {isDownloading ? (
+                          <><div className="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" /> Downloading...</>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3" />
+                            </svg>
+                            Download Dossier PDF
+                          </>
+                        )}
+                      </button>
                       
                       {!docs.compiledPdf.driveViewLink && (
                         <button 

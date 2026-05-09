@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllUsers, getUserDetail, verifyUser, getStats, getActivityLogs, generateCompiledPdf, syncCompiledPdfToDrive } = require('../controllers/admin.controller');
+const { getAllUsers, getUserDetail, verifyUser, getStats, getActivityLogs, generateCompiledPdf, syncCompiledPdfToDrive, downloadCompiledPdf } = require('../controllers/admin.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 router.use(protect, authorize('admin'));
@@ -11,5 +11,6 @@ router.put('/verify/:id', verifyUser);
 router.get('/activity-logs', getActivityLogs);
 router.post('/compile-pdf/:id', generateCompiledPdf);
 router.post('/sync-drive/:id', syncCompiledPdfToDrive);
+router.get('/download-pdf/:id', downloadCompiledPdf);
 
 module.exports = router;
