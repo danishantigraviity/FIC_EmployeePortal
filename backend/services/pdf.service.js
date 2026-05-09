@@ -38,42 +38,41 @@ exports.generateCompiledPdf = async (documents, userId) => {
         fileBuffer = await fs.readFile(localPath);
       }
 
-      // Detect file extension from URL or fallback
-      let fileExtension = 'pdf';
-      if (docInfo.url && docInfo.url.includes('.')) {
-        fileExtension = docInfo.url.split('?')[0].split('.').pop().toLowerCase();
-      }
-
-      // If it's a Drive link, the extension might be missing, 
-      // so we check if it's a known image type or assume PDF
-      const isImage = ['jpg', 'jpeg', 'png'].includes(fileExtension);
-      const isPdf = fileExtension === 'pdf' || (!isImage && docInfo.publicId);
-
-      if (isPdf) {
+      // Process file based on content rather than extension
+      console.log(`🔍 Processing ${key}...`);
+      
+      // Try to load as PDF first
+      try {
         const donorPdf = await PDFDocument.load(fileBuffer);
         const copiedPages = await mergedPdf.copyPages(donorPdf, donorPdf.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
         pagesAdded += copiedPages.length;
-      } else if (isImage) {
-        let image;
-        if (fileExtension === 'png') {
-          image = await mergedPdf.embedPng(fileBuffer);
-        } else {
-          image = await mergedPdf.embedJpg(fileBuffer);
-        }
+        console.log(`✅ Processed ${key} as PDF`);
+      } catch (pdfErr) {
+        // If PDF fails, try as Image
+        try {
+          let image;
+          // Try embedding as PNG first, then JPG
+          try {
+            image = await mergedPdf.embedPng(fileBuffer);
+          } catch (pngErr) {
+            image = await mergedPdf.embedJpg(fileBuffer);
+          }
 
-        const page = mergedPdf.addPage();
-        const { width, height } = page.getSize();
-        
-        // Scale image to fit page
-        const dims = image.scaleToFit(width - 40, height - 40);
-        page.drawImage(image, {
-          x: (width - dims.width) / 2,
-          y: (height - dims.height) / 2,
-          width: dims.width,
-          height: dims.height,
-        });
-        pagesAdded++;
+          const page = mergedPdf.addPage();
+          const { width, height } = page.getSize();
+          const dims = image.scaleToFit(width - 40, height - 40);
+          page.drawImage(image, {
+            x: (width - dims.width) / 2,
+            y: (height - dims.height) / 2,
+            width: dims.width,
+            height: dims.height,
+          });
+          pagesAdded++;
+          console.log(`✅ Processed ${key} as Image`);
+        } catch (imgErr) {
+          console.error(`❌ Failed to process ${key} as both PDF and Image:`, imgErr.message);
+        }
       }
     } catch (err) {
       console.error(`Failed to process ${key}:`, err.message);
