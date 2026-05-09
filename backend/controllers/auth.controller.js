@@ -4,7 +4,7 @@ const User = require('../models/User.model');
 const { sendTokens, generateAccessToken, generateRefreshToken } = require('../utils/jwt.utils');
 const { 
   sendRegistrationEmail, 
-  sendResetEmail,
+  sendPasswordResetEmail,
   sendOTPEmail 
 } = require('../utils/email.utils');
 const crypto = require('crypto');
@@ -184,7 +184,7 @@ exports.forgotPassword = async (req, res) => {
 
     console.log(`🔑 Reset token generated for ${email}`);
     
-    const sent = await sendResetEmail(email, user.name, resetToken);
+    const sent = await sendPasswordResetEmail(email, user.name, resetToken);
     if (!sent) {
        return res.status(500).json({ success: false, message: 'Failed to send reset email. Contact IT.' });
     }

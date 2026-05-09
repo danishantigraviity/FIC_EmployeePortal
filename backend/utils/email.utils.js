@@ -115,7 +115,7 @@ exports.sendOTPEmail = async (email, otp) => {
   return sendMail(email, 'Verification Code — Forge India', html);
 };
 
-exports.sendResetEmail = async (email, name, token) => {
+exports.sendPasswordResetEmail = async (email, name, token) => {
   const url = `${getFrontendUrl()}/reset-password?token=${token}`;
   const html = `
     <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
