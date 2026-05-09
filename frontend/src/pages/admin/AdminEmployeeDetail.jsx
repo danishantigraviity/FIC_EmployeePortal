@@ -413,11 +413,10 @@ export default function AdminEmployeeDetail() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <a href={docs.compiledPdf.url?.startsWith('http') ? docs.compiledPdf.url : `${import.meta.env.VITE_API_URL || ''}${docs.compiledPdf.url}`} 
-                        download={`compiled_docs_${user.name?.replace(/\s+/g, '_')}.pdf`}
+                      <a href={docs.compiledPdf.url} 
                         target="_blank" rel="noopener noreferrer" 
                         className="w-full py-3.5 bg-white border border-blue-100 text-blue-700 rounded-2xl text-[11px] font-bold uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm">
-                        Download PDF Document
+                        View & Download Dossier
                       </a>
                       
                       {!docs.compiledPdf.driveViewLink && (

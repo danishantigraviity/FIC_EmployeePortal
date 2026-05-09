@@ -137,8 +137,10 @@ exports.generateCompiledPdf = async (req, res) => {
     console.log('✨ Compilation process completed successfully!');
     
     // Return absolute URL for frontend
+    const baseUrl = process.env.BACKEND_URL || 'https://fic-iyyd.onrender.com';
     const finalData = {
-      ...updatedDoc.compiledPdf.toObject()
+      ...updatedDoc.compiledPdf.toObject(),
+      url: updatedDoc.compiledPdf.url.startsWith('http') ? updatedDoc.compiledPdf.url : `${baseUrl}${updatedDoc.compiledPdf.url}`
     };
 
     res.json({ 
