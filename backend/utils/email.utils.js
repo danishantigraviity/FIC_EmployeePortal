@@ -1,5 +1,5 @@
 require('dotenv').config();
-const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
 const getFrontendUrl = () => {
   const url = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://fic-employee-portal.vercel.app';
@@ -7,34 +7,44 @@ const getFrontendUrl = () => {
 };
 
 const emailUser = (process.env.SMTP_USER || process.env.EMAIL_USER || 'antigraviity.cro@gmail.com').trim();
-const emailPass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim();
 
-// Use Gmail SMTP with App Password on port 587 (TLS) - works on Render
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // STARTTLS
-  auth: {
-    user: emailUser,
-    pass: emailPass,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
+// Gmail API via HTTPS (port 443) — works on Render, no SMTP port issues
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_DRIVE_CLIENT_ID,
+  process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+  process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost'
+);
+
+oauth2Client.setCredentials({
+  refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN
 });
+
+const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+const createRawMessage = (to, subject, html) => {
+  const str = [
+    `Content-Type: text/html; charset="UTF-8"\n`,
+    `MIME-Version: 1.0\n`,
+    `Content-Transfer-Encoding: 7bit\n`,
+    `to: ${to}\n`,
+    `from: "Forge India HR" <${emailUser}>\n`,
+    `subject: ${subject}\n\n`,
+    `${html}`
+  ].join('');
+  return Buffer.from(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
 
 const sendMail = async (to, subject, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"Forge India HR" <${emailUser}>`,
-      to,
-      subject,
-      html,
+    const raw = createRawMessage(to, subject, html);
+    const res = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw }
     });
-    console.log(`✅ Email sent to ${to}. Message ID: ${info.messageId}`);
+    console.log(`✅ Email sent to ${to}. ID: ${res.data.id}`);
     return true;
   } catch (err) {
-    console.warn(`⚠️ Email send failed for ${to}:`, err.message);
+    console.warn(`⚠️ Email failed for ${to}:`, err.message);
     return false;
   }
 };

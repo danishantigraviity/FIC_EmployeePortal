@@ -19,7 +19,10 @@ const oauth2Client = new google.auth.OAuth2(
   REDIRECT_URI
 );
 
-const SCOPES = ['https://www.googleapis.com/auth/drive'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/drive',
+  'https://www.googleapis.com/auth/gmail.send'
+];
 
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: 'offline',
