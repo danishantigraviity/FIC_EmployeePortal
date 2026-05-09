@@ -149,8 +149,8 @@ export default function BankDetailsPage() {
                 name="ifscCode"
                 value={formData.ifscCode}
                 onChange={(e) => {
-                  e.target.value = e.target.value.toUpperCase();
-                  handleChange(e);
+                  const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+                  setFormData(prev => ({ ...prev, ifscCode: val }));
                 }}
                 placeholder="e.g. SBIN0001234"
                 maxLength={11}
@@ -165,11 +165,14 @@ export default function BankDetailsPage() {
             <div className="group space-y-1">
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1 ml-0.5">Account Number</label>
               <input
-                type="password"
+                type="text"
                 name="accountNumber"
                 value={formData.accountNumber}
-                onChange={handleChange}
-                placeholder="••••••••••••••••"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setFormData(prev => ({ ...prev, accountNumber: val }));
+                }}
+                placeholder="Enter account number"
                 className={`w-full px-4 py-3 text-sm font-medium outline-none transition-all duration-300 rounded-2xl ${
                   errors.accountNumber ? 'border-red-500 bg-red-50/20 focus:ring-4 focus:ring-red-100/50' : 
                   'bg-white border-slate-200 hover:border-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 shadow-sm'
@@ -179,12 +182,16 @@ export default function BankDetailsPage() {
             </div>
 
             <div className="group space-y-1">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1 ml-0.5">Re-enter Account Number</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-1 ml-0.5">Confirm Account Number</label>
               <input
+                type="text"
                 name="confirmAccountNumber"
                 value={formData.confirmAccountNumber}
-                onChange={handleChange}
-                placeholder="Confirm your account number"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  setFormData(prev => ({ ...prev, confirmAccountNumber: val }));
+                }}
+                placeholder="Re-enter account number"
                 className={`w-full px-4 py-3 text-sm font-medium outline-none transition-all duration-300 rounded-2xl ${
                   errors.confirmAccountNumber ? 'border-red-500 bg-red-50/20 focus:ring-4 focus:ring-red-100/50' : 
                   'bg-white border-slate-200 hover:border-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-50 shadow-sm'

@@ -32,6 +32,11 @@ exports.schemas = {
     }).optional(),
     aadhaarNumber: Joi.string().pattern(/^\d{12}$/).optional().allow('').messages({ 'string.pattern.base': 'Aadhaar must be 12 digits' }),
     panNumber: Joi.string().pattern(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/).optional().allow('').messages({ 'string.pattern.base': 'Invalid PAN format' }),
+    bankDetails: Joi.object({
+      bankName: Joi.string().required(),
+      accountNumber: Joi.string().pattern(/^\d{9,18}$/).required().messages({ 'string.pattern.base': 'Account number must be 9-18 digits' }),
+      ifscCode: Joi.string().pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/).required().messages({ 'string.pattern.base': 'Invalid IFSC format' }),
+    }).optional(),
     emergencyContact: Joi.object({
       name: Joi.string().optional().allow(''),
       relation: Joi.string().optional().allow(''),

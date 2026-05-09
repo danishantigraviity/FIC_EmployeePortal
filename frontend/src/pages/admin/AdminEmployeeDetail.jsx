@@ -574,6 +574,31 @@ export default function AdminEmployeeDetail() {
         </div>
       )}
 
+      {/* ── BANK DETAILS ── */}
+      {tab === 'Bank' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card title="Banking Information" icon="🏦">
+            <Field label="Bank Name" value={profile?.bankDetails?.bankName} />
+            <Field label="IFSC Code" value={profile?.bankDetails?.ifscCode} mono />
+            <Field 
+              label="Account Number" 
+              value={profile?.bankDetails?.accountNumber ? `XXXX XXXX ${profile.bankDetails.accountNumber.slice(-4)}` : 'Not provided'} 
+              mono 
+            />
+          </Card>
+          <div className="bg-blue-50/50 rounded-2xl border border-blue-100 p-6 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0 text-xl">🛡️</div>
+            <div>
+              <h4 className="text-sm font-bold text-blue-900 mb-1">Payroll Verification</h4>
+              <p className="text-xs text-blue-800/60 leading-relaxed">
+                These details will be used for automated monthly salary disbursements. 
+                Ensure the name in the profile matches the bank account holder name to prevent payment failures.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── ACTION ── */}
       {tab === 'Action' && (
         <div className="space-y-4">
