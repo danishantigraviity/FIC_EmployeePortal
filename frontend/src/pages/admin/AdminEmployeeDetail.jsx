@@ -470,7 +470,12 @@ export default function AdminEmployeeDetail() {
                         <span className="text-[10px] text-slate-500 font-mono">SECURE_VIEWER_v1.0</span>
                       </div>
                       <iframe 
-                        src={`${import.meta.env.VITE_API_URL}${docs.compiledPdf.url}#toolbar=0`} 
+                        src={docs.compiledPdf.url?.includes('drive.google.com') 
+                          ? docs.compiledPdf.url.replace('/view', '/preview') 
+                          : docs.compiledPdf.url?.startsWith('http') 
+                            ? docs.compiledPdf.url 
+                            : `${import.meta.env.VITE_API_URL || ''}${docs.compiledPdf.url}#toolbar=0`
+                        } 
                         className="w-full h-[600px] bg-white border-0"
                         title="Compiled Document Preview"
                       />

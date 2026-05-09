@@ -108,7 +108,8 @@ exports.generateCompiledPdf = async (req, res) => {
     // 3. Update DB
     console.log('💾 Saving compilation results to database...');
     const updateData = {
-      url: localResult.url,
+      // Use Drive link as primary URL if available for persistence
+      url: (driveResult && driveResult.viewLink) ? driveResult.viewLink : localResult.url,
       generatedAt: new Date(),
       ...(driveResult && { 
         driveId: driveResult.driveId, 
@@ -136,16 +137,10 @@ exports.generateCompiledPdf = async (req, res) => {
 
     console.log('✨ Compilation process completed successfully!');
     
-    // Return absolute URL for frontend
-    const baseUrl = process.env.BACKEND_URL || 'https://fic-iyyd.onrender.com';
-    const finalData = {
-      ...updatedDoc.compiledPdf.toObject(),
-      url: updatedDoc.compiledPdf.url.startsWith('http') ? updatedDoc.compiledPdf.url : `${baseUrl}${updatedDoc.compiledPdf.url}`
-    };
-
+    // Return the updated data
     res.json({ 
       success: true, 
-      data: finalData,
+      data: updatedDoc.compiledPdf,
       message: 'Documents compiled successfully'
     });
   } catch (err) {
