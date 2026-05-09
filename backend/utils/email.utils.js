@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { google } = require('googleapis');
+// Trigger deploy
 
 const getFrontendUrl = () => {
   const url = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://fic-employee-portal.vercel.app';
