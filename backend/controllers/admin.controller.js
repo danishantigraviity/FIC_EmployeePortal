@@ -106,6 +106,7 @@ exports.generateCompiledPdf = async (req, res) => {
     }
 
     // 3. Update DB
+    console.log('💾 Saving compilation results to database...');
     const updateData = {
       url: localResult.url,
       generatedAt: new Date(),
@@ -121,12 +122,19 @@ exports.generateCompiledPdf = async (req, res) => {
       { new: true }
     );
 
-    // Send notification email
-    const user = await User.findById(id);
-    if (user) {
-      await sendPdfReadyEmail(user.email, user.name).catch(e => console.error('Email failed:', e.message));
+    if (!updatedDoc) {
+      console.error('❌ Could not find document record to update after compilation');
+      return res.status(404).json({ success: false, message: 'Document record not found for update' });
     }
 
+    // Send notification email
+    console.log('📧 Sending notification email...');
+    const user = await User.findById(id);
+    if (user && user.email) {
+      await sendPdfReadyEmail(user.email, user.name).catch(e => console.error('⚠️ Email failed:', e.message));
+    }
+
+    console.log('✨ Compilation process completed successfully!');
     res.json({ 
       success: true, 
       data: updatedDoc.compiledPdf,
