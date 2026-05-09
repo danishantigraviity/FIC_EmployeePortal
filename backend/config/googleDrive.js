@@ -11,12 +11,14 @@ try {
     process.env.GOOGLE_DRIVE_REDIRECT_URI || process.env.CLIENT_URL || 'http://localhost'
   );
 
-  if (process.env.GOOGLE_DRIVE_REFRESH_TOKEN) {
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
+  
+  if (refreshToken && refreshToken.trim() !== '' && refreshToken !== 'your_refresh_token_here') {
     oauth2Client.setCredentials({
-      refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+      refresh_token: refreshToken.trim()
     });
     drive = google.drive({ version: 'v3', auth: oauth2Client });
-    console.log('✅ Google Drive initialized via OAuth2');
+    console.log('✅ Google Drive initialized via OAuth2 (Production Mode)');
   } else {
     let keyPath = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON;
     
@@ -36,11 +38,11 @@ try {
         console.warn(`⚠️ Google Drive key file not found at: ${keyPath}`);
       }
     } else {
-      console.warn('⚠️ No Google Drive credentials found (OAuth2 or Service Account)');
+      console.warn('⚠️ No Google Drive credentials found (Check GOOGLE_DRIVE_REFRESH_TOKEN or GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON)');
     }
   }
 } catch (err) {
-  console.error('Failed to initialize Google Drive:', err.message);
+  console.error('❌ Failed to initialize Google Drive:', err.message);
 }
 
 module.exports = drive;

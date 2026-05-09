@@ -48,6 +48,9 @@ exports.uploadToDrive = async (filePath, fileName, mimeType = 'application/pdf')
       });
     } catch (permErr) {
       console.warn('⚠️ Could not set public permissions on Drive file:', permErr.message);
+      if (permErr.message.includes('insufficient authentication scopes')) {
+        console.error('👉 Suggestion: The Refresh Token lacks the full "drive" scope. Please regenerate it.');
+      }
     }
 
     return {
@@ -56,6 +59,18 @@ exports.uploadToDrive = async (filePath, fileName, mimeType = 'application/pdf')
     };
   } catch (err) {
     console.error('❌ Google Drive upload failed:', err.message);
+    
+    // Detailed error guidance
+    if (err.message.includes('insufficient authentication scopes')) {
+      console.error('👉 CAUSE: The OAuth2 Refresh Token does not have "https://www.googleapis.com/auth/drive" scope.');
+      console.error('👉 FIX: Run "node backend/getRefreshToken.js" and update GOOGLE_DRIVE_REFRESH_TOKEN on Render.');
+    } else if (err.message.includes('access_denied') || err.message.includes('403')) {
+      console.error('👉 CAUSE: The user has not granted permission or the Folder ID is inaccessible.');
+      console.error('👉 FIX: Ensure the folder is shared with the email used for OAuth2, or use a folder you own.');
+    } else if (err.message.includes('storageQuotaExceeded')) {
+      console.error('👉 CAUSE: The Google Drive storage is full.');
+    }
+    
     throw err;
   }
 };
