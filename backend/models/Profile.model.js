@@ -11,8 +11,8 @@ const profileSchema = new mongoose.Schema({
     pincode: String,
     country: { type: String, default: 'India' }
   },
-  aadhaarNumber: { type: String, trim: true },
-  panNumber: { type: String, trim: true, uppercase: true },
+  aadhaarNumber: { type: String, trim: true, unique: true, sparse: true },
+  panNumber: { type: String, trim: true, uppercase: true, unique: true, sparse: true },
   emergencyContact: {
     name: String,
     relation: String,

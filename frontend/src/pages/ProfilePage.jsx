@@ -221,17 +221,23 @@ export default function ProfilePage() {
             label="Aadhaar Number" 
             value={form.aadhaarNumber} 
             maxLength={12}
-            onChange={v => set('aadhaarNumber', v.replace(/\D/g, ''))} 
-            placeholder="12-digit Aadhaar" 
-            error={form.aadhaarNumber && form.aadhaarNumber.length !== 12 ? 'Must be exactly 12 digits' : ''}
+            onChange={v => {
+              const cleaned = v.replace(/\D/g, '').slice(0, 12);
+              set('aadhaarNumber', cleaned);
+            }} 
+            placeholder="12-digit Aadhaar Number" 
+            error={form.aadhaarNumber && form.aadhaarNumber.length !== 12 ? 'Aadhaar must be exactly 12 digits' : ''}
           />
           <Input 
             label="PAN Number" 
             value={form.panNumber} 
             maxLength={10}
-            onChange={v => set('panNumber', v.toUpperCase().replace(/[^A-Z0-9]/g, ''))} 
+            onChange={v => {
+              const upper = v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+              set('panNumber', upper);
+            }} 
             placeholder="ABCDE1234F" 
-            error={form.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.panNumber) ? 'Invalid format' : ''}
+            error={form.panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(form.panNumber) ? 'Invalid PAN format (e.g., ABCDE1234F)' : ''}
           />
         </Section>
 

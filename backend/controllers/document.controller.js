@@ -15,6 +15,16 @@ exports.uploadDocument = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid field name' });
     }
 
+    // Strict check for Aadhaar/PAN upload: Must have number in profile first
+    if (fieldname === 'aadhaar' || fieldname === 'pan') {
+      const Profile = require('../models/Profile.model');
+      const profile = await Profile.findOne({ userId: req.user.id });
+      if (!profile || (fieldname === 'aadhaar' && !profile.aadhaarNumber) || (fieldname === 'pan' && !profile.panNumber)) {
+        if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
+        return res.status(400).json({ success: false, message: `Please save your ${fieldname.toUpperCase()} number in Step 1 before uploading the card.` });
+      }
+    }
+
     // 1. Upload to Google Drive
     let fileUrl = '';
     let driveId = '';

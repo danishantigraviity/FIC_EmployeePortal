@@ -10,6 +10,26 @@ exports.getProfile = async (req, res) => {
 
 exports.upsertProfile = async (req, res) => {
   try {
+    const { aadhaarNumber, panNumber } = req.body;
+
+    // Strict validation for identity numbers if provided
+    if (aadhaarNumber && !/^\d{12}$/.test(aadhaarNumber)) {
+      return res.status(400).json({ success: false, message: 'Invalid Aadhaar: Must be 12 digits' });
+    }
+    if (panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
+      return res.status(400).json({ success: false, message: 'Invalid PAN format' });
+    }
+
+    // Check for duplicates
+    if (aadhaarNumber) {
+      const existingAadhaar = await Profile.findOne({ aadhaarNumber, userId: { $ne: req.user.id } });
+      if (existingAadhaar) return res.status(400).json({ success: false, message: 'Aadhaar number already registered with another profile' });
+    }
+    if (panNumber) {
+      const existingPan = await Profile.findOne({ panNumber, userId: { $ne: req.user.id } });
+      if (existingPan) return res.status(400).json({ success: false, message: 'PAN number already registered with another profile' });
+    }
+
     const profile = await Profile.findOneAndUpdate(
       { userId: req.user.id },
       { ...req.body, userId: req.user.id },

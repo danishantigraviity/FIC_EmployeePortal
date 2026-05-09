@@ -267,9 +267,17 @@ export default function AdminEmployeeDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card title="Basic Information">
             <Field label="Date of Birth" value={profile?.dob ? new Date(profile.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : null} />
-            <Field label="Gender" value={profile?.gender?.charAt(0).toUpperCase() + profile?.gender?.slice(1)} />
-            <Field label="Aadhaar Number" value={profile?.aadhaarNumber} mono />
-            <Field label="PAN Number" value={profile?.panNumber} mono />
+            <Field label="Gender" value={profile?.gender ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1) : null} />
+            <Field 
+              label="Aadhaar Number" 
+              value={profile?.aadhaarNumber ? `XXXX XXXX ${profile.aadhaarNumber.slice(-4)}` : null} 
+              mono 
+            />
+            <Field 
+              label="PAN Number" 
+              value={profile?.panNumber ? `${profile.panNumber.slice(0,2)}XXX ${profile.panNumber.slice(5,9)} ${profile.panNumber.slice(-1)}` : null} 
+              mono 
+            />
           </Card>
           <Card title="Address">
             <Field label="Street" value={profile?.address?.street} />
