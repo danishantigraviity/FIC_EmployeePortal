@@ -9,15 +9,18 @@ const getFrontendUrl = () => {
 const emailUser = (process.env.SMTP_USER || process.env.EMAIL_USER || 'antigraviity.cro@gmail.com').trim();
 const emailPass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim();
 
-// Use Gmail SMTP with App Password (no extra OAuth scopes needed)
+// Use Gmail SMTP with App Password on port 587 (TLS) - works on Render
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false, // STARTTLS
   auth: {
     user: emailUser,
     pass: emailPass,
   },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 const sendMail = async (to, subject, html) => {
