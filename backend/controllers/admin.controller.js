@@ -135,9 +135,15 @@ exports.generateCompiledPdf = async (req, res) => {
     }
 
     console.log('✨ Compilation process completed successfully!');
+    
+    // Return absolute URL for frontend
+    const finalData = {
+      ...updatedDoc.compiledPdf.toObject()
+    };
+
     res.json({ 
       success: true, 
-      data: updatedDoc.compiledPdf,
+      data: finalData,
       message: 'Documents compiled successfully'
     });
   } catch (err) {
