@@ -509,14 +509,17 @@ export default function AdminEmployeeDetail() {
                         <span className="text-[10px] text-slate-500 font-mono">SECURE_VIEWER_v1.0</span>
                       </div>
                       <iframe 
-                        src={docs.compiledPdf.url?.includes('drive.google.com') 
-                          ? docs.compiledPdf.url.replace('/view', '/preview') 
-                          : docs.compiledPdf.url?.startsWith('http') 
-                            ? docs.compiledPdf.url 
-                            : `${import.meta.env.VITE_API_URL || ''}${docs.compiledPdf.url}#toolbar=0`
-                        } 
+                        src={
+                          // Use driveId to build the official embeddable preview URL
+                          docs.compiledPdf.driveId
+                            ? `https://drive.google.com/file/d/${docs.compiledPdf.driveId}/preview`
+                            : docs.compiledPdf.url?.includes('drive.google.com')
+                              ? docs.compiledPdf.url.replace('/view', '/preview')
+                              : `${import.meta.env.VITE_API_URL || ''}${docs.compiledPdf.url}`
+                        }
                         className="w-full h-[600px] bg-white border-0"
                         title="Compiled Document Preview"
+                        allow="autoplay"
                       />
                     </div>
                   </div>
