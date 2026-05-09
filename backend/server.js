@@ -33,6 +33,7 @@ app.all('/', (req, res) => res.json({
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: false,
+  frameguard: false, // Allow iframe embedding for PDF previewer
 }));
 
 // Robust CORS

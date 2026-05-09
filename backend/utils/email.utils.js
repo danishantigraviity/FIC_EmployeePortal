@@ -77,3 +77,21 @@ exports.sendOTPEmail = async (email, otp) => {
   const raw = createRawMessage(email, 'Verification Code', html);
   return gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
 };
+
+exports.sendRejectionEmail = async (email, name, reason) => {
+  const html = `<div style="font-family:sans-serif;padding:20px"><h2>Hi ${name},</h2><p>Unfortunately your profile has been rejected.</p>${reason ? `<p><b>Reason:</b> ${reason}</p>` : ''}<p>Please contact HR for more details.</p></div>`;
+  const raw = createRawMessage(email, 'Profile Update — Forge India', html);
+  return gmail.users.messages.send({ userId: 'me', requestBody: { raw } }).catch(e => console.warn('sendRejectionEmail failed:', e.message));
+};
+
+exports.sendPdfReadyEmail = async (email, name) => {
+  const html = `<div style="font-family:sans-serif;padding:20px"><h2>Hi ${name},</h2><p>Your compiled document dossier is ready and has been securely stored.</p><p>Your HR team can now access your complete employee file.</p></div>`;
+  const raw = createRawMessage(email, 'Your Dossier is Ready — Forge India', html);
+  return gmail.users.messages.send({ userId: 'me', requestBody: { raw } }).catch(e => console.warn('sendPdfReadyEmail failed:', e.message));
+};
+
+exports.sendDriveSyncEmail = async (email, name, driveLink) => {
+  const html = `<div style="font-family:sans-serif;padding:20px"><h2>Hi ${name},</h2><p>Your documents have been synced to Google Drive.</p>${driveLink ? `<p><a href="${driveLink}">View your dossier</a></p>` : ''}</div>`;
+  const raw = createRawMessage(email, 'Drive Sync Complete — Forge India', html);
+  return gmail.users.messages.send({ userId: 'me', requestBody: { raw } }).catch(e => console.warn('sendDriveSyncEmail failed:', e.message));
+};
