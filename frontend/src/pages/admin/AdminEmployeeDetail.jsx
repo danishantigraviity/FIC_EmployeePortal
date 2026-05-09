@@ -455,6 +455,26 @@ export default function AdminEmployeeDetail() {
                       </a>
                     </div>
                   )}
+
+                  {/* ── PDF PREVIEWER ── */}
+                  <div className="md:col-span-2 mt-4">
+                    <div className="bg-slate-900 rounded-3xl overflow-hidden border-8 border-slate-900 shadow-2xl">
+                      <div className="px-4 py-3 bg-slate-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-400" />
+                          <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                          <div className="w-3 h-3 rounded-full bg-green-400" />
+                          <span className="ml-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Dossier Preview</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-mono">SECURE_VIEWER_v1.0</span>
+                      </div>
+                      <iframe 
+                        src={`${import.meta.env.VITE_API_URL}${docs.compiledPdf.url}#toolbar=0`} 
+                        className="w-full h-[600px] bg-white border-0"
+                        title="Compiled Document Preview"
+                      />
+                    </div>
+                  </div>
                   
                   <div className="md:col-span-2 flex items-center justify-center gap-4 py-4 border-t border-slate-50 mt-2">
                     <div className="flex items-center gap-2">
