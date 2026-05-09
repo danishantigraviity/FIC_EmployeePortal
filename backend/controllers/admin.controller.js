@@ -141,7 +141,11 @@ exports.generateCompiledPdf = async (req, res) => {
       message: 'Documents compiled successfully'
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('🔥 Compilation Pipeline Failed:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to compile documents: ' + err.message 
+    });
   }
 };
 
