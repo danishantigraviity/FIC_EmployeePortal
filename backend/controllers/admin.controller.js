@@ -50,24 +50,42 @@ exports.getUserDetail = async (req, res) => {
 exports.verifyUser = async (req, res) => {
   try {
     const { status, rejectionReason } = req.body;
-    if (!['approved', 'rejected'].includes(status)) return res.status(400).json({ success: false, message: 'Invalid status' });
+    if (!['approved', 'rejected'].includes(status))
+      return res.status(400).json({ success: false, message: 'Invalid status' });
 
-    const user = await User.findByIdAndUpdate(req.params.id,
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
       { status, ...(rejectionReason && { rejectionReason }) },
       { new: true }
     );
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    await ActivityLog.create({ userId: user._id, performedBy: req.user.id, action: `User ${status}`, details: rejectionReason || '', ip: req.ip });
-    
+    await ActivityLog.create({
+      userId: user._id,
+      performedBy: req.user.id,
+      action: `User ${status}`,
+      details: rejectionReason || '',
+      ip: req.ip
+    });
+
+    // Send email non-blocking — never delay or crash the response
     if (status === 'approved') {
-      await sendApprovalEmail(user.email, user.name);
+      console.log(`📧 Sending approval email to ${user.email}...`);
+      sendApprovalEmail(user.email, user.name)
+        .then(() => console.log(`✅ Approval email sent to ${user.email}`))
+        .catch(e => console.warn(`⚠️ Approval email failed for ${user.email}:`, e.message));
     } else if (status === 'rejected') {
-      await sendRejectionEmail(user.email, user.name, rejectionReason);
+      console.log(`📧 Sending rejection email to ${user.email}...`);
+      sendRejectionEmail(user.email, user.name, rejectionReason)
+        .then(() => console.log(`✅ Rejection email sent to ${user.email}`))
+        .catch(e => console.warn(`⚠️ Rejection email failed for ${user.email}:`, e.message));
     }
 
     res.json({ success: true, data: user, message: `Employee ${status} successfully` });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) {
+    console.error('🔥 verifyUser failed:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.getStats = async (req, res) => {
