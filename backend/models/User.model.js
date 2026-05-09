@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema({
   status: { type: String, enum: ['invited', 'registered', 'pending', 'approved', 'rejected'], default: 'invited' },
   registrationToken: { type: String },
   registrationTokenExpiry: { type: Date },
+  resetPasswordToken: { type: String },
+  resetPasswordExpire: { type: Date },
   isRegistered: { type: Boolean, default: false },
   refreshTokens: [{ type: String }],
   profileCompletion: { type: Number, default: 0 },

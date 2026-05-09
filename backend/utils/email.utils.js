@@ -113,3 +113,22 @@ exports.sendOTPEmail = async (email, otp) => {
     </div>`;
   return sendMail(email, 'Verification Code — Forge India', html);
 };
+
+exports.sendResetEmail = async (email, name, token) => {
+  const url = `${getFrontendUrl()}/reset-password?token=${token}`;
+  const html = `
+    <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
+      <h2 style="color:#0D2B6B;margin-top:0">Password Reset Request</h2>
+      <p>Hello ${name},</p>
+      <p>We received a request to reset your password for the Forge India Employee Portal.</p>
+      <div style="margin:24px 0">
+        <a href="${url}" style="background:#F5C518;color:#0D2B6B;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block">
+          Reset Password
+        </a>
+      </div>
+      <p style="color:#666;font-size:13px">If you did not request this, please ignore this email. This link will expire in 1 hour.</p>
+      <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
+      <p style="color:#999;font-size:11px">Forge India Private Limited • Employee Support</p>
+    </div>`;
+  return sendMail(email, 'Reset Your Password — Forge India', html);
+};

@@ -4,7 +4,7 @@ const User = require('../models/User.model');
 const { sendTokens, generateAccessToken, generateRefreshToken } = require('../utils/jwt.utils');
 const { 
   sendRegistrationEmail, 
-  sendPasswordResetEmail,
+  sendResetEmail,
   sendOTPEmail 
 } = require('../utils/email.utils');
 const crypto = require('crypto');
@@ -171,32 +171,52 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ success: false, message: 'No user with that email' });
+    if (!user) {
+      // To prevent email enumeration, we return success even if user not found, 
+      // but in this internal portal, showing "not found" is usually acceptable for HR support.
+      return res.status(404).json({ success: false, message: 'No employee account found with this email' });
+    }
 
-    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetToken = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = Date.now() + 3600000; // 1 hour
+    user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save();
 
-    await sendPasswordResetEmail(email, resetToken);
-    res.json({ success: true, message: 'Password reset email sent' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+    console.log(`🔑 Reset token generated for ${email}`);
+    
+    const sent = await sendResetEmail(email, user.name, resetToken);
+    if (!sent) {
+       return res.status(500).json({ success: false, message: 'Failed to send reset email. Contact IT.' });
+    }
+
+    res.json({ success: true, message: 'A secure password reset link has been sent to your email.' });
+  } catch (err) { 
+    res.status(500).json({ success: false, message: err.message }); 
+  }
 };
 
 exports.resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
+    
+    // Find user with valid token and not expired
     const user = await User.findOne({ 
       resetPasswordToken: token, 
-      resetPasswordExpiry: { $gt: Date.now() } 
+      resetPasswordExpire: { $gt: Date.now() } 
     });
-    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired token' });
 
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'The reset link is invalid or has expired' });
+    }
+
+    // Set new password (model pre-save will hash it)
     user.password = password;
     user.resetPasswordToken = undefined;
-    user.resetPasswordExpiry = undefined;
+    user.resetPasswordExpire = undefined;
     await user.save();
 
-    res.json({ success: true, message: 'Password reset successful' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+    res.json({ success: true, message: 'Password has been reset successfully. You can now login.' });
+  } catch (err) { 
+    res.status(500).json({ success: false, message: err.message }); 
+  }
 };

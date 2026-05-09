@@ -5,6 +5,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 // Auth pages
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Layouts
 import AdminLayout from './components/layout/AdminLayout';
@@ -88,6 +90,8 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Root → smart redirect */}
           <Route path="/" element={<RootRedirect />} />
