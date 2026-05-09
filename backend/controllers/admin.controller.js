@@ -282,3 +282,33 @@ exports.downloadCompiledPdf = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to download PDF: ' + err.message });
   }
 };
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // 1. Log activity before deletion
+    await ActivityLog.create({
+      userId: req.user.id,
+      action: `Deleted employee: ${user.name} (${user.email})`,
+      details: `Full profile cleanup completed for user ID: ${id}`,
+      ip: req.ip,
+      userAgent: req.get('user-agent')
+    });
+
+    // 2. Comprehensive cleanup
+    await Promise.all([
+      Profile.findOneAndDelete({ userId: id }),
+      Document.findOneAndDelete({ userId: id }),
+      Education.deleteMany({ userId: id }),
+      Experience.deleteMany({ userId: id }),
+      User.findByIdAndDelete(id)
+    ]);
+
+    res.json({ success: true, message: 'Employee and associated records deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

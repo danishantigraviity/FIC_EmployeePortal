@@ -113,6 +113,7 @@ export const adminAPI = {
   syncDrive: (id) => api.post(`/admin/sync-drive/${id}`),
   getActivityLogs: () => api.get('/admin/activity-logs'),
   downloadPdf: (id) => api.get(`/admin/download-pdf/${id}`, { responseType: 'blob' }),
+  deleteUser: (id) => api.delete(`/admin/user/${id}`),
 };
 
 export default api;

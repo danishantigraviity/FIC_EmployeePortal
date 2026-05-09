@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { adminAPI, authAPI } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import Select from '../../components/common/Select';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import toast from 'react-hot-toast';
 
 const STATUS_BADGE = {
@@ -30,6 +31,9 @@ export default function AdminDashboard() {
   const [showInvite, setShowInvite] = useState(false);
   const [inviteForm, setInviteForm] = useState({ name: '', email: '', phone: '', department: '' });
   const [inviting, setInviting] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -83,6 +87,23 @@ export default function AdminDashboard() {
       console.error('Invite Error:', err);
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    const tid = toast.loading('Purging employee data...');
+    try {
+      await adminAPI.deleteUser(deleteId);
+      setUsers(prev => prev.filter(u => u._id !== deleteId));
+      setStats(prev => ({ ...prev, total: prev.total - 1 }));
+      toast.success('Employee record permanently removed', { id: tid });
+      setShowDelete(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Purge failed', { id: tid });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -219,11 +240,22 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link to={`/admin/employees/${u._id}`}
-                            className="inline-flex items-center gap-1 text-xs px-4 py-2 rounded-xl font-bold transition-all bg-gray-50 text-gray-600 hover:bg-blue-600 hover:text-white shadow-sm"
-                          >
-                            Details
-                          </Link>
+                          <div className="flex items-center justify-end gap-2">
+                            <Link to={`/admin/employees/${u._id}`}
+                              className="inline-flex items-center gap-1 text-xs px-4 py-2 rounded-xl font-bold transition-all bg-gray-50 text-gray-600 hover:bg-blue-600 hover:text-white shadow-sm"
+                            >
+                              Details
+                            </Link>
+                            <button 
+                              onClick={() => { setDeleteId(u._id); setShowDelete(true); }}
+                              className="p-2 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all"
+                              title="Delete Employee"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -339,6 +371,16 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {/* Delete Confirmation */}
+      <ConfirmModal 
+        isOpen={showDelete}
+        onClose={() => !deleting && setShowDelete(false)}
+        onConfirm={handleDelete}
+        title="Permanent Deletion"
+        message="This will completely purge the employee's profile, documents, and records from the system. This action cannot be reversed."
+        confirmText={deleting ? "Purging..." : "Confirm Delete"}
+        type="danger"
+      />
     </div>
   );
 }
