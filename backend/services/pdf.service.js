@@ -38,14 +38,23 @@ exports.generateCompiledPdf = async (documents, userId) => {
         fileBuffer = await fs.readFile(localPath);
       }
 
-      const fileExtension = docInfo.url.split('.').pop().toLowerCase();
+      // Detect file extension from URL or fallback
+      let fileExtension = 'pdf';
+      if (docInfo.url && docInfo.url.includes('.')) {
+        fileExtension = docInfo.url.split('?')[0].split('.').pop().toLowerCase();
+      }
 
-      if (fileExtension === 'pdf') {
+      // If it's a Drive link, the extension might be missing, 
+      // so we check if it's a known image type or assume PDF
+      const isImage = ['jpg', 'jpeg', 'png'].includes(fileExtension);
+      const isPdf = fileExtension === 'pdf' || (!isImage && docInfo.publicId);
+
+      if (isPdf) {
         const donorPdf = await PDFDocument.load(fileBuffer);
         const copiedPages = await mergedPdf.copyPages(donorPdf, donorPdf.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
         pagesAdded += copiedPages.length;
-      } else if (['jpg', 'jpeg', 'png'].includes(fileExtension)) {
+      } else if (isImage) {
         let image;
         if (fileExtension === 'png') {
           image = await mergedPdf.embedPng(fileBuffer);
