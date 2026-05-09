@@ -11,7 +11,7 @@ export default function AdminApprovals() {
 
   useEffect(() => {
     setLoading(true);
-    adminAPI.getUsers({ status: 'pending' })
+    adminAPI.getUsers({ status: 'pending,registered' })
       .then(({ data }) => setUsers(data.data))
       .finally(() => setLoading(false));
   }, []);
@@ -79,6 +79,9 @@ export default function AdminApprovals() {
                         </div>
                         <span className="text-xs font-bold text-gray-500">{u.profileCompletion}%</span>
                       </div>
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${u.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700'}`}>
+                        {u.status === 'pending' ? 'Awaiting Review' : 'In Progress'}
+                      </span>
                       <Link to={`/admin/employees/${u._id}`} 
                         className="text-xs font-bold text-blue-600 hover:underline uppercase tracking-wider">
                         View Full Profile

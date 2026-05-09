@@ -17,7 +17,13 @@ exports.getAllUsers = async (req, res) => {
   try {
     const { status, search, page = 1, limit = 10, department } = req.query;
     const query = { role: 'employee' };
-    if (status) query.status = status;
+    if (status) {
+      if (status.includes(',')) {
+        query.status = { $in: status.split(',') };
+      } else {
+        query.status = status;
+      }
+    }
     if (department) query.department = department;
     if (search) query.$or = [
       { name: { $regex: search, $options: 'i' } },
@@ -90,14 +96,15 @@ exports.verifyUser = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
-    const [total, approved, pending, rejected, invited] = await Promise.all([
+    const [total, approved, pending, rejected, invited, registered] = await Promise.all([
       User.countDocuments({ role: 'employee' }),
       User.countDocuments({ role: 'employee', status: 'approved' }),
       User.countDocuments({ role: 'employee', status: 'pending' }),
       User.countDocuments({ role: 'employee', status: 'rejected' }),
       User.countDocuments({ role: 'employee', status: 'invited' }),
+      User.countDocuments({ role: 'employee', status: 'registered' }),
     ]);
-    res.json({ success: true, data: { total, approved, pending, rejected, invited } });
+    res.json({ success: true, data: { total, approved, pending, rejected, invited, registered } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 

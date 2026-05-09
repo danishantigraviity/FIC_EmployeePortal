@@ -156,13 +156,14 @@ export default function AdminDashboard() {
         <StatCard label="Pending" value={stats.pending} color="#D97706" />
         <StatCard label="Rejected" value={stats.rejected} color="#DC2626" />
         <StatCard label="Invited" value={stats.invited} color="#7C3AED" />
+        <StatCard label="Registered" value={stats.registered} color="#8B5CF6" />
       </div>
 
       {/* Quick Nav Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Link to="/admin/approvals" className="group bg-white rounded-2xl border border-amber-100 p-6 hover:shadow-md transition">
-          <div className="text-sm font-bold text-gray-800 uppercase tracking-tight">Pending Approvals</div>
-          <div className="text-xs text-amber-600 mt-1 font-semibold">{stats.pending} waiting for review</div>
+          <div className="text-sm font-bold text-gray-800 uppercase tracking-tight">Review Queue</div>
+          <div className="text-xs text-amber-600 mt-1 font-semibold">{(stats.pending || 0) + (stats.registered || 0)} potential approvals</div>
         </Link>
         <Link to="/admin/employees" className="group bg-white rounded-2xl border border-blue-100 p-6 hover:shadow-md transition">
           <div className="text-sm font-bold text-gray-800 uppercase tracking-tight">Employee Directory</div>
