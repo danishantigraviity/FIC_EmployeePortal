@@ -10,27 +10,36 @@ const api = axios.create({
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => error ? prom.reject(error) : prom.resolve(token));
+const processQueue = (error) => {
+  failedQueue.forEach(prom => error ? prom.reject(error) : prom.resolve());
   failedQueue = [];
 };
 
+// ── REQUEST: Attach token from localStorage (fallback for cross-domain) ──────
 api.interceptors.request.use(config => {
-  // No more manual Authorization header from localStorage!
-  // withCredentials: true handles the HTTP-only cookies automatically.
+  const token = localStorage.getItem('accessToken');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
+// ── RESPONSE: Handle 401 → refresh → retry ────────────────────────────────
 api.interceptors.response.use(
   res => res,
   async err => {
     const original = err.config;
-    if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/refresh-token')) {
+
+    const isAuthEndpoint = original.url.includes('/auth/refresh-token') ||
+                           original.url.includes('/auth/login') ||
+                           original.url.includes('/auth/register');
+
+    if (err.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
-          .then(() => { 
-            original._retry = true; // Mark as retry before re-sending
-            return api(original); 
+          .then(() => {
+            const token = localStorage.getItem('accessToken');
+            if (token) original.headers.Authorization = `Bearer ${token}`;
+            original._retry = true;
+            return api(original);
           })
           .catch(e => Promise.reject(e));
       }
@@ -39,13 +48,24 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await api.post('/auth/refresh-token');
+        const refreshToken = localStorage.getItem('refreshToken');
+        const { data } = await api.post('/auth/refresh-token', { refreshToken });
+
+        if (data.accessToken) {
+          localStorage.setItem('accessToken', data.accessToken);
+          if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+          original.headers.Authorization = `Bearer ${data.accessToken}`;
+        }
+
         processQueue(null);
         return api(original);
       } catch (refreshErr) {
         processQueue(refreshErr);
-        // Only redirect if we're not already on a public page to avoid reload loops
-        if (!['/login', '/register', '/forgot-password', '/reset-password'].includes(window.location.pathname)) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        // Only redirect if not already on a public page
+        const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+        if (!publicPaths.includes(window.location.pathname)) {
           window.location.href = '/login';
         }
         return Promise.reject(refreshErr);
@@ -53,6 +73,7 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
     if (err.response?.status === 500) {
       toast.error('Server error. Please try again later.');
     } else if (err.code === 'ECONNABORTED' || !err.response) {

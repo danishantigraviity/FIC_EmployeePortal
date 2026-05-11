@@ -16,22 +16,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Attempt to fetch user on mount (cookies will be sent automatically)
-    fetchMe();
+    // Check if we have a stored token (cross-domain fallback) before fetching user
+    const token = localStorage.getItem('accessToken');
+    if (token) fetchMe(); else setLoading(false);
 
-    // Safety timeout: if loading is still true after 10s, force it to false
     const timer = setTimeout(() => setLoading(false), 10000);
     return () => clearTimeout(timer);
   }, [fetchMe]);
 
   const login = async (credentials) => {
     const { data } = await authAPI.login(credentials);
+    // Store tokens in localStorage for reliable cross-domain (Vercel→Render) auth
+    if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     setUser(data.user);
     return data.user;
   };
 
   const logout = async () => {
     try { await authAPI.logout(); } catch {}
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setUser(null);
   };
 
