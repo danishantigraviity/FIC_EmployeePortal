@@ -23,16 +23,20 @@ oauth2Client.setCredentials({
 const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
 const createRawMessage = (to, subject, html) => {
-  const str = [
-    `Content-Type: text/html; charset="UTF-8"\n`,
-    `MIME-Version: 1.0\n`,
-    `Content-Transfer-Encoding: 7bit\n`,
-    `to: ${to}\n`,
-    `from: "Forge India HR" <${emailUser}>\n`,
-    `subject: ${subject}\n\n`,
-    `${html}`
-  ].join('');
-  return Buffer.from(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const messageParts = [
+    `To: ${to}`,
+    'Content-Type: text/html; charset=utf-8',
+    'MIME-Version: 1.0',
+    `Subject: ${subject}`,
+    '',
+    html,
+  ];
+  const message = messageParts.join('\n');
+  return Buffer.from(message)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 };
 
 const sendMail = async (to, subject, html) => {
@@ -50,95 +54,100 @@ const sendMail = async (to, subject, html) => {
   }
 };
 
+const EMAIL_LAYOUT = (content) => `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Forge India</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding-bottom: 40px; }
+        .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 16px; margin-top: 40px; overflow: hidden; }
+        .content { padding: 48px 32px; text-align: center; }
+        .logo { width: 120px; height: auto; margin-bottom: 32px; }
+        .h1 { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 16px; line-height: 1.3; }
+        .p { font-size: 16px; color: #64748b; line-height: 1.6; margin-bottom: 24px; }
+        .btn { display: inline-block; padding: 14px 32px; background-color: #1A4FA0; color: #ffffff !important; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 10px; margin: 8px 0; transition: background-color 0.2s; }
+        .footer { padding: 24px 32px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; background-color: #fafafa; }
+        .highlight { color: #1A4FA0; font-weight: 600; }
+        @media screen and (max-width: 600px) { .content { padding: 32px 20px; } .main { margin-top: 20px; border-radius: 0; } }
+      </style>
+    </head>
+    <body>
+      <center class="wrapper">
+        <table class="main" width="100%">
+          <tr>
+            <td class="content">
+              <img src="${getFrontendUrl()}/logo.png" alt="Forge India" class="logo">
+              ${content}
+            </td>
+          </tr>
+          <tr>
+            <td class="footer">
+              &copy; ${new Date().getFullYear()} Forge India Private Limited. All rights reserved.<br>
+              Employee Onboarding Portal &bull; HR Support
+            </td>
+          </tr>
+        </table>
+      </center>
+    </body>
+  </html>
+`;
+
 exports.sendRegistrationEmail = async (email, name, token) => {
   const url = `${getFrontendUrl()}/register?token=${token}`;
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
-      <div style="margin-bottom:20px;text-align:center">
-        <img src="${getFrontendUrl()}/logo.png" alt="Forge India" style="height:50px;width:auto" />
-      </div>
-      <h2 style="color:#0D2B6B">Welcome to Forge India, ${name}!</h2>
-      <p>You have been invited to complete your employee onboarding.</p>
-      <a href="${url}" style="background:#1A4FA0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin:16px 0">
-        Complete Registration
-      </a>
-      <p style="color:#999;font-size:12px">Link expires in 48 hours.</p>
-    </div>`;
-  return sendMail(email, 'Complete Your Registration — Forge India', html);
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1">Complete Your Onboarding</h1>
+    <p class="p">Hello <span class="highlight">${name}</span>,<br>You've been invited to join the Forge India team. Please complete your registration to begin the onboarding process.</p>
+    <a href="${url}" class="btn">Get Started</a>
+    <p class="p" style="font-size: 13px; margin-top: 32px; color: #94a3b8;">This link will expire in 48 hours for security reasons.</p>
+  `);
+  return sendMail(email, 'Complete Your Registration - Forge India', html);
 };
 
 exports.sendApprovalEmail = async (email, name) => {
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px">
-      <h2 style="color:#059669">Congratulations, ${name}!</h2>
-      <p>Your profile has been reviewed and <strong>approved</strong> by HR.</p>
-      <p>You can now access the employee portal and view your onboarding status.</p>
-    </div>`;
-  return sendMail(email, 'Profile Approved — Forge India', html);
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1" style="color: #059669;">Welcome Aboard!</h1>
+    <p class="p">Congratulations <span class="highlight">${name}</span>,<br>Your profile has been reviewed and <b style="color: #059669;">officially approved</b> by the HR department.</p>
+    <p class="p">You can now access your employee dashboard to view next steps.</p>
+    <a href="${getFrontendUrl()}" class="btn">Access Portal</a>
+  `);
+  return sendMail(email, 'Profile Approved - Forge India', html);
 };
 
 exports.sendRejectionEmail = async (email, name, reason) => {
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px">
-      <h2 style="color:#DC2626">Profile Update — ${name}</h2>
-      <p>Unfortunately, your profile submission was not approved at this time.</p>
-      ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-      <p>Please contact your HR representative for further guidance.</p>
-    </div>`;
-  return sendMail(email, 'Profile Update — Forge India', html);
-};
-
-exports.sendPdfReadyEmail = async (email, name) => {
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px">
-      <h2 style="color:#0D2B6B">Dossier Ready — ${name}</h2>
-      <p>Your compiled employee document dossier has been generated and securely stored.</p>
-      <p>Your HR team now has access to your complete verified employee file.</p>
-    </div>`;
-  return sendMail(email, 'Your Dossier is Ready — Forge India', html);
-};
-
-exports.sendDriveSyncEmail = async (email, name, driveLink) => {
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px">
-      <h2 style="color:#0D2B6B">Drive Sync Complete — ${name}</h2>
-      <p>Your compiled dossier has been successfully synced to Google Drive.</p>
-      ${driveLink ? `<a href="${driveLink}" style="color:#1A4FA0">View on Google Drive</a>` : ''}
-    </div>`;
-  return sendMail(email, 'Drive Sync Complete — Forge India', html);
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1" style="color: #e11d48;">Profile Update</h1>
+    <p class="p">Hello ${name},<br>Your profile submission requires some modifications before it can be approved.</p>
+    ${reason ? `<div style="background: #fff1f2; padding: 16px; border-radius: 8px; margin-bottom: 24px; text-align: left;"><p class="p" style="color: #9f1239; margin-bottom: 0;"><b>Feedback:</b> ${reason}</p></div>` : ''}
+    <p class="p">Please log in to the portal to address the items mentioned above.</p>
+    <a href="${getFrontendUrl()}" class="btn" style="background-color: #e11d48;">Update Profile</a>
+  `);
+  return sendMail(email, 'Action Required: Profile Update - Forge India', html);
 };
 
 exports.sendOTPEmail = async (email, otp) => {
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
-      <div style="margin-bottom:20px;text-align:center">
-        <img src="${getFrontendUrl()}/logo.png" alt="Forge India" style="height:50px;width:auto" />
-      </div>
-      <h2 style="color:#0D2B6B">Your Verification Code</h2>
-      <p style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#1A4FA0">${otp}</p>
-      <p style="color:#999;font-size:12px">This code expires in 10 minutes.</p>
-    </div>`;
-  return sendMail(email, 'Verification Code — Forge India', html);
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1">Verify Your Identity</h1>
+    <p class="p">Please use the verification code below to securely access your account.</p>
+    <div style="background: #f1f5f9; padding: 24px; border-radius: 12px; margin: 24px 0;">
+      <span style="font-size: 32px; font-weight: 800; letter-spacing: 12px; color: #1A4FA0; font-family: monospace;">${otp}</span>
+    </div>
+    <p class="p" style="font-size: 13px; color: #94a3b8;">For your security, this code expires in 10 minutes.</p>
+  `);
+  return sendMail(email, 'Verification Code - Forge India', html);
 };
 
 exports.sendPasswordResetEmail = async (email, name, token) => {
   const url = `${getFrontendUrl()}/reset-password?token=${token}`;
-  const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
-      <div style="margin-bottom:20px;text-align:center">
-        <img src="${getFrontendUrl()}/logo.png" alt="Forge India" style="height:50px;width:auto" />
-      </div>
-      <h2 style="color:#0D2B6B;margin-top:0">Password Reset Request</h2>
-      <p>Hello ${name},</p>
-      <p>We received a request to reset your password for the Forge India Employee Portal.</p>
-      <div style="margin:24px 0">
-        <a href="${url}" style="background:#F5C518;color:#0D2B6B;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block">
-          Reset Password
-        </a>
-      </div>
-      <p style="color:#666;font-size:13px">If you did not request this, please ignore this email. This link will expire in 1 hour.</p>
-      <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
-      <p style="color:#999;font-size:11px">Forge India Private Limited • Employee Support</p>
-    </div>`;
-  return sendMail(email, 'Reset Your Password — Forge India', html);
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1">Password Reset</h1>
+    <p class="p">Hello ${name},<br>We received a request to reset your password. Click the button below to choose a new one.</p>
+    <a href="${url}" class="btn" style="background-color: #F5C518; color: #0D2B6B !important;">Reset Password</a>
+    <p class="p" style="font-size: 13px; margin-top: 32px; color: #94a3b8;">If you did not request this reset, you can safely ignore this email.</p>
+  `);
+  return sendMail(email, 'Reset Your Password - Forge India', html);
 };
