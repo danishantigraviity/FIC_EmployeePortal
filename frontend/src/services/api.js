@@ -28,21 +28,30 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/refresh-token')) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
-          .then(token => { original.headers.Authorization = `Bearer ${token}`; return api(original); });
+          .then(() => { 
+            original._retry = true; // Mark as retry before re-sending
+            return api(original); 
+          })
+          .catch(e => Promise.reject(e));
       }
+
       original._retry = true;
       isRefreshing = true;
+
       try {
-        // refreshToken is now in an HTTP-only cookie, so we don't need to pass it in the body.
-        // The backend will read it from cookies.
         await api.post('/auth/refresh-token');
         processQueue(null);
         return api(original);
       } catch (refreshErr) {
-        processQueue(refreshErr, null);
-        window.location.href = '/login';
+        processQueue(refreshErr);
+        // Only redirect if we're not already on a public page to avoid reload loops
+        if (!['/login', '/register', '/forgot-password', '/reset-password'].includes(window.location.pathname)) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshErr);
-      } finally { isRefreshing = false; }
+      } finally {
+        isRefreshing = false;
+      }
     }
     if (err.response?.status === 500) {
       toast.error('Server error. Please try again later.');
