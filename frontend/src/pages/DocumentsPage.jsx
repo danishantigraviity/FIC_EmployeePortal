@@ -5,16 +5,16 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const DOC_TYPES = [
-  { key: 'aadhaar', label: 'Aadhaar Card', accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Front & back scan of Aadhaar card', icon: '🪪', identity: true },
-  { key: 'pan',     label: 'PAN Card',     accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Clear scan of PAN card',           icon: '💳', identity: true },
-  { key: 'resume',          label: 'Resume / CV',         accepts: '.pdf',              desc: 'Latest resume in PDF format',          icon: '📄' },
-  { key: 'profilePhoto',    label: 'Profile Photo',       accepts: '.jpg,.jpeg,.png',   desc: 'Recent passport-size photo',           icon: '👤' },
-  { key: 'tenthCertificate',    label: '10th Certificate',    accepts: '.jpg,.jpeg,.png,.pdf', desc: '10th mark sheet or certificate',   icon: '🏫' },
-  { key: 'twelfthCertificate',  label: '12th Certificate',    accepts: '.jpg,.jpeg,.png,.pdf', desc: '12th mark sheet or certificate',  icon: '🎓' },
-  { key: 'degreeProvisional',   label: 'Degree Provisional',  accepts: '.jpg,.jpeg,.png,.pdf', desc: 'UG provisional certificate',      icon: '📜' },
-  { key: 'pgProvisional',       label: 'PG Provisional',      accepts: '.jpg,.jpeg,.png,.pdf', desc: 'PG provisional certificate',      icon: '🏛️', optional: true },
-  { key: 'experienceCertificate', label: 'Work Experience',   accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Previous employment certificate', icon: '💼', optional: true },
-  { key: 'bankPassbook',        label: 'Bank Details',        accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Passbook or cancelled cheque',    icon: '🏦' },
+  { key: 'aadhaar', label: 'Aadhaar Card', accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Front & back scan of Aadhaar card', identity: true },
+  { key: 'pan',     label: 'PAN Card',     accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Clear scan of PAN card',           identity: true },
+  { key: 'resume',          label: 'Resume / CV',         accepts: '.pdf',              desc: 'Latest resume in PDF format' },
+  { key: 'profilePhoto',    label: 'Profile Photo',       accepts: '.jpg,.jpeg,.png',   desc: 'Recent passport-size photo' },
+  { key: 'tenthCertificate',    label: '10th Certificate',    accepts: '.jpg,.jpeg,.png,.pdf', desc: '10th mark sheet or certificate' },
+  { key: 'twelfthCertificate',  label: '12th Certificate',    accepts: '.jpg,.jpeg,.png,.pdf', desc: '12th mark sheet or certificate' },
+  { key: 'degreeProvisional',   label: 'Degree Provisional',  accepts: '.jpg,.jpeg,.png,.pdf', desc: 'UG provisional certificate' },
+  { key: 'pgProvisional',       label: 'PG Provisional',      accepts: '.jpg,.jpeg,.png,.pdf', desc: 'PG provisional certificate', optional: true },
+  { key: 'experienceCertificate', label: 'Work Experience',   accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Previous employment certificate', optional: true },
+  { key: 'bankPassbook',        label: 'Bank Details',        accepts: '.jpg,.jpeg,.png,.pdf', desc: 'Passbook or cancelled cheque' },
 ];
 
 // ─── Client-side format validators ───────────────────────────────────────────
@@ -166,7 +166,9 @@ export default function DocumentsPage() {
 
       {/* ── Validation notice banner ── */}
       <div className="flex items-start gap-4 p-5 rounded-2xl bg-blue-950/5 border border-blue-100">
-        <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-sm flex-shrink-0">🔍</div>
+        <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-sm flex-shrink-0">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </div>
         <div>
           <p className="text-[12px] font-bold text-slate-800 mb-0.5">Intelligent Document Scanning Active</p>
           <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -223,15 +225,12 @@ export default function DocumentsPage() {
 
               {/* Card Header */}
               <div className="p-6 pb-4 flex items-center justify-between border-b border-slate-50/50">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{doc.icon}</span>
-                  <div>
-                    <h4 className="text-[13px] font-bold text-slate-800 tracking-tight">{doc.label}</h4>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                      {doc.optional ? 'Optional' : 'Required'}
-                      {doc.identity && <span className="ml-2 text-blue-500">• ID Verified</span>}
-                    </p>
-                  </div>
+                <div>
+                  <h4 className="text-[13px] font-bold text-slate-800 tracking-tight">{doc.label}</h4>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    {doc.optional ? 'Optional' : 'Required'}
+                    {doc.identity && <span className="ml-2 text-blue-500">• ID Verified</span>}
+                  </p>
                 </div>
 
                 <div>

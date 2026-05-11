@@ -43,11 +43,11 @@ const STEPS = [
 ];
 
 const STATUS_CONFIG = {
-  invited:    { label: 'Invite Accepted',  color: '#3B82F6', bg: '#EFF6FF',  icon: '✉️', msg: 'Please complete all steps below to submit your profile for HR review.' },
-  registered: { label: 'Profile Setup',    color: '#8B5CF6', bg: '#F5F3FF',  icon: '📝', msg: 'You are in the process of completing your onboarding. Fill in all sections.' },
-  pending:    { label: 'Under HR Review',  color: '#D97706', bg: '#FFFBEB',  icon: '⏳', msg: 'Your profile has been submitted and is being reviewed by HR. We\'ll notify you soon.' },
-  approved:   { label: 'Approved!',        color: '#059669', bg: '#ECFDF5',  icon: '✅', msg: 'Congratulations! Your profile has been approved. Welcome to Forge India!' },
-  rejected:   { label: 'Action Required',  color: '#DC2626', bg: '#FEF2F2',  icon: '❌', msg: 'Your profile needs updates. Please review and re-submit your information.' },
+  invited:    { label: 'Invite Accepted',  color: '#3B82F6', bg: '#EFF6FF',  msg: 'Please complete all steps below to submit your profile for HR review.' },
+  registered: { label: 'Profile Setup',    color: '#8B5CF6', bg: '#F5F3FF',  msg: 'You are in the process of completing your onboarding. Fill in all sections.' },
+  pending:    { label: 'Under HR Review',  color: '#D97706', bg: '#FFFBEB',  msg: 'Your profile has been submitted and is being reviewed by HR. We\'ll notify you soon.' },
+  approved:   { label: 'Approved!',        color: '#059669', bg: '#ECFDF5',  msg: 'Congratulations! Your profile has been approved. Welcome to Forge India!' },
+  rejected:   { label: 'Action Required',  color: '#DC2626', bg: '#FEF2F2',  msg: 'Your profile needs updates. Please review and re-submit your information.' },
 };
 
 export default function OnboardingHome() {
@@ -128,7 +128,9 @@ export default function OnboardingHome() {
 
         {/* Status Message */}
         <div className="relative mt-10 p-5 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-start gap-4">
-          <span className="text-2xl mt-0.5">{status.icon}</span>
+          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01" /></svg>
+          </div>
           <p className="text-sm text-blue-50/90 leading-relaxed italic">
             "{status.msg}"
           </p>
@@ -208,7 +210,9 @@ export default function OnboardingHome() {
       <div className="pt-6">
         {user?.status === 'pending' && (
           <div className="p-6 rounded-[24px] bg-amber-50/50 border border-amber-100 flex gap-5 items-start">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-xl shadow-inner">⌛</div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shadow-inner flex-shrink-0">
+              <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
             <div className="flex-1">
               <h4 className="font-bold text-amber-900 text-base mb-1">Application Under Review</h4>
               <p className="text-amber-800/70 text-sm leading-relaxed">
@@ -221,7 +225,9 @@ export default function OnboardingHome() {
         
         {user?.status === 'approved' && (
           <div className="p-6 rounded-[24px] bg-green-50/50 border border-green-100 flex gap-5 items-start">
-            <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center text-xl shadow-inner">🎉</div>
+            <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center shadow-inner flex-shrink-0">
+              <svg className="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+            </div>
             <div className="flex-1">
               <h4 className="font-bold text-green-900 text-base mb-1">Onboarding Approved</h4>
               <p className="text-green-800/70 text-sm leading-relaxed">
