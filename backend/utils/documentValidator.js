@@ -209,104 +209,60 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
     return { valid: false, message: 'Unsupported file type. Please upload JPG, PNG, or PDF.' };
   }
 
+  // ─── 1. Attempt OCR (Non-Blocking) ──────────────────────────────────────────
   let text = '';
-  if (isImage) {
-    const quality = await checkImageQuality(filePath);
-    if (!quality.valid) return quality;
-    text = await extractTextFromImage(filePath);
-  } else {
-    text = await extractPdfText(filePath);
+  try {
+    if (isImage) {
+      // We still enhance for better OCR, but we don't reject on quality anymore
+      const processedPath = await enhanceImageForOcr(filePath);
+      const { data: { text: ocrResult } } = await Tesseract.recognize(processedPath || filePath, 'eng+hin');
+      text = ocrResult || '';
+      if (processedPath && processedPath !== filePath && fs.existsSync(processedPath)) fs.unlinkSync(processedPath);
+    } else {
+      text = await extractPdfText(filePath);
+    }
+  } catch (err) {
+    console.warn('[documentValidator] Soft OCR failed, skipping AI verification:', err.message);
   }
 
   const lowerText = text.toLowerCase();
-
-  // Strict Rejection for random images/selfies
-  // We've reduced the length requirement slightly but check for any valid character
-  if (!text || text.trim().length < 10) {
-    return { 
-      valid: false, 
-      message: 'No meaningful text detected. Please ensure you are uploading a clear scan of your ID card, not a random photo or selfie.' 
-    };
-  }
-
-  // Common Rejections
-  if (lowerText.includes('screenshot') || lowerText.includes('whatsapp image')) {
-    // Some OCR might pick up "Screenshot" text from the file overlay
-    // return { valid: false, message: 'Screenshots are not allowed. Please upload an original document.' };
-  }
-
+  
+  // ─── 2. Aadhaar Specific (Soft Validation) ──────────────────────────────────
   if (fieldname === 'aadhaar') {
-    // 1. Keyword check
-    const hasKeyword = AADHAAR_KEYWORDS.some(kw => lowerText.includes(kw));
-    if (!hasKeyword) {
-      return { valid: false, message: 'Aadhaar Card keywords not detected. Please upload a valid Aadhaar document.' };
-    }
-
-    // 2. Document mismatch check
-    if (PAN_KEYWORDS.some(kw => lowerText.includes(kw) && !['government of india'].includes(kw))) {
-      return { valid: false, message: 'This appears to be a PAN Card. Please upload an Aadhaar Card.' };
-    }
-
-    // 3. Number extraction and validation
     const foundNumbers = [...text.matchAll(AADHAAR_REGEX)].map(m => normaliseAadhaar(m[0]));
-    
-    if (foundNumbers.length === 0) {
-      return { valid: false, message: 'Could not find a valid 12-digit Aadhaar number on the document.' };
-    }
-
-    // Check Aadhaar checksum for all found numbers
     const validNumbers = foundNumbers.filter(num => validateAadhaarChecksum(num));
-    if (validNumbers.length === 0) {
-      return { valid: false, message: 'The Aadhaar number detected on the document is invalid (checksum failed).' };
-    }
 
-    // 4. Expected number match
-    if (expectedNumber) {
+    if (validNumbers.length > 0 && expectedNumber) {
       const normalExpected = normaliseAadhaar(expectedNumber);
       if (!validNumbers.includes(normalExpected)) {
         return { 
           valid: false, 
-          message: `Aadhaar number mismatch. The document contains ${validNumbers[0]}, but you entered ${expectedNumber}.` 
+          message: `Aadhaar number mismatch. The document appears to contain ${validNumbers[0]}, but you entered ${expectedNumber}. Please check your entry or upload the correct card.` 
         };
       }
     }
-
-    return { valid: true, message: 'Aadhaar document verified.' };
+    // If no number found, we let it pass for manual HR review
+    return { valid: true, message: 'Aadhaar uploaded for manual review.' };
   }
 
+  // ─── 3. PAN Specific (Soft Validation) ──────────────────────────────────────
   if (fieldname === 'pan') {
-    // 1. Keyword check
-    const hasKeyword = PAN_KEYWORDS.some(kw => lowerText.includes(kw));
-    if (!hasKeyword) {
-      return { valid: false, message: 'PAN Card keywords not detected. Please upload a valid PAN Card.' };
-    }
-
-    // 2. Document mismatch check
-    if (AADHAAR_KEYWORDS.some(kw => lowerText.includes(kw) && !['government of india'].includes(kw))) {
-      return { valid: false, message: 'This appears to be an Aadhaar Card. Please upload a PAN Card.' };
-    }
-
-    // 3. Number extraction
     const foundPans = [...text.toUpperCase().matchAll(PAN_REGEX)].map(m => m[0]);
-    if (foundPans.length === 0) {
-      return { valid: false, message: 'Could not find a valid PAN number (AAAAA9999A) on the document.' };
-    }
 
-    // 4. Expected number match
-    if (expectedNumber) {
+    if (foundPans.length > 0 && expectedNumber) {
       const upperExpected = expectedNumber.toUpperCase().trim();
       if (!foundPans.includes(upperExpected)) {
         return { 
           valid: false, 
-          message: `PAN number mismatch. The document contains ${foundPans[0]}, but you entered ${upperExpected}.` 
+          message: `PAN number mismatch. The document appears to contain ${foundPans[0]}, but you entered ${upperExpected}. Please check your entry or upload the correct card.` 
         };
       }
     }
-
-    return { valid: true, message: 'PAN document verified.' };
+    // If no number found, we let it pass for manual HR review
+    return { valid: true, message: 'PAN uploaded for manual review.' };
   }
 
-  return { valid: true, message: 'Document accepted.' };
+  return { valid: true, message: 'Document successfully uploaded.' };
 }
 
 module.exports = { validateIdentityDocument };
