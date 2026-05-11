@@ -1,5 +1,7 @@
 const Profile = require('../models/Profile.model');
+const ActivityLog = require('../models/ActivityLog.model');
 const { calculateCompletion } = require('../utils/profileCompletion');
+const { createBlindIndex } = require('../utils/crypto.utils');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -20,13 +22,15 @@ exports.upsertProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid PAN format' });
     }
 
-    // Check for duplicates
+    // Check for duplicates using Blind Indexing
     if (aadhaarNumber) {
-      const existingAadhaar = await Profile.findOne({ aadhaarNumber, userId: { $ne: req.user.id } });
+      const idx = createBlindIndex(aadhaarNumber);
+      const existingAadhaar = await Profile.findOne({ aadhaarIndex: idx, userId: { $ne: req.user.id } });
       if (existingAadhaar) return res.status(400).json({ success: false, message: 'Aadhaar number already registered with another profile' });
     }
     if (panNumber) {
-      const existingPan = await Profile.findOne({ panNumber, userId: { $ne: req.user.id } });
+      const idx = createBlindIndex(panNumber);
+      const existingPan = await Profile.findOne({ panIndex: idx, userId: { $ne: req.user.id } });
       if (existingPan) return res.status(400).json({ success: false, message: 'PAN number already registered with another profile' });
     }
 
@@ -35,6 +39,16 @@ exports.upsertProfile = async (req, res) => {
       { ...req.body, userId: req.user.id },
       { new: true, upsert: true, runValidators: true }
     );
+
+    // Audit Log
+    await ActivityLog.create({
+      userId: req.user.id,
+      performedBy: req.user.id,
+      action: 'Profile Update',
+      details: `Updated fields: ${Object.keys(req.body).join(', ')}`,
+      ip: req.ip
+    });
+
     const { score, steps } = await calculateCompletion(req.user.id);
     res.json({ success: true, data: profile, profileCompletion: score, completedSteps: steps });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
