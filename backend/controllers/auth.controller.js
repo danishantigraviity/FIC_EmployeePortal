@@ -168,13 +168,6 @@ exports.refreshToken = async (req, res) => {
     if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/'
-    };
-
     res.cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 });
     res.cookie('refreshToken', newRefreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
