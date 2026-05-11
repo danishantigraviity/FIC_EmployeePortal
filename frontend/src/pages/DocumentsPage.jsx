@@ -164,19 +164,6 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* ── Validation notice banner ── */}
-      <div className="flex items-start gap-4 p-5 rounded-2xl bg-blue-950/5 border border-blue-100">
-        <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white text-sm flex-shrink-0">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-        </div>
-        <div>
-          <p className="text-[12px] font-bold text-slate-800 mb-0.5">Intelligent Document Scanning Active</p>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Aadhaar and PAN uploads are automatically scanned to verify document type and match your entered ID numbers.
-            Wrong documents, mismatched numbers, and blurred scans will be rejected with clear guidance.
-          </p>
-        </div>
-      </div>
 
       {/* ── Upload Guidelines ── */}
       <div className="relative rounded-2xl p-8 sm:p-10 text-white overflow-hidden shadow-xl shadow-blue-900/10"
