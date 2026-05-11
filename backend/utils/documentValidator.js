@@ -209,11 +209,10 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
     return { valid: false, message: 'Unsupported file type. Please upload JPG, PNG, or PDF.' };
   }
 
-  // ─── 1. Attempt OCR (Non-Blocking) ──────────────────────────────────────────
+  // ─── 1. Extract Text ────────────────────────────────────────────────────────
   let text = '';
   try {
     if (isImage) {
-      // We still enhance for better OCR, but we don't reject on quality anymore
       const processedPath = await enhanceImageForOcr(filePath);
       const { data: { text: ocrResult } } = await Tesseract.recognize(processedPath || filePath, 'eng+hin');
       text = ocrResult || '';
@@ -222,47 +221,59 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
       text = await extractPdfText(filePath);
     }
   } catch (err) {
-    console.warn('[documentValidator] Soft OCR failed, skipping AI verification:', err.message);
+    console.error('[documentValidator] OCR extraction failed:', err.message);
+    return { valid: false, message: 'Document processing failed. Please try again with a clearer file.' };
   }
 
-  const lowerText = text.toLowerCase();
-  
-  // ─── 2. Aadhaar Specific (Soft Validation) ──────────────────────────────────
+  const normalExpected = expectedNumber ? normaliseAadhaar(expectedNumber).toUpperCase() : null;
+  if (!normalExpected) {
+    return { valid: false, message: `Please enter your ${fieldname.toUpperCase()} number in your profile before uploading the document.` };
+  }
+
+  // ─── 2. Aadhaar Matching ───────────────────────────────────────────────────
   if (fieldname === 'aadhaar') {
     const foundNumbers = [...text.matchAll(AADHAAR_REGEX)].map(m => normaliseAadhaar(m[0]));
     const validNumbers = foundNumbers.filter(num => validateAadhaarChecksum(num));
 
-    if (validNumbers.length > 0 && expectedNumber) {
-      const normalExpected = normaliseAadhaar(expectedNumber);
-      if (!validNumbers.includes(normalExpected)) {
-        return { 
-          valid: false, 
-          message: `Aadhaar number mismatch. The document appears to contain ${validNumbers[0]}, but you entered ${expectedNumber}. Please check your entry or upload the correct card.` 
-        };
-      }
+    if (validNumbers.length === 0) {
+      return { 
+        valid: false, 
+        message: 'Could not detect a valid 12-digit Aadhaar number on this document. Please upload a clearer scan.' 
+      };
     }
-    // If no number found, we let it pass for manual HR review
-    return { valid: true, message: 'Aadhaar uploaded for manual review.' };
+
+    if (!validNumbers.includes(normalExpected)) {
+      return { 
+        valid: false, 
+        message: `Identity Mismatch: The uploaded document contains Aadhaar ${validNumbers[0]}, but your profile says ${expectedNumber}.` 
+      };
+    }
+
+    return { valid: true, message: 'Aadhaar number verified.' };
   }
 
-  // ─── 3. PAN Specific (Soft Validation) ──────────────────────────────────────
+  // ─── 3. PAN Matching ───────────────────────────────────────────────────────
   if (fieldname === 'pan') {
     const foundPans = [...text.toUpperCase().matchAll(PAN_REGEX)].map(m => m[0]);
 
-    if (foundPans.length > 0 && expectedNumber) {
-      const upperExpected = expectedNumber.toUpperCase().trim();
-      if (!foundPans.includes(upperExpected)) {
-        return { 
-          valid: false, 
-          message: `PAN number mismatch. The document appears to contain ${foundPans[0]}, but you entered ${upperExpected}. Please check your entry or upload the correct card.` 
-        };
-      }
+    if (foundPans.length === 0) {
+      return { 
+        valid: false, 
+        message: 'Could not detect a valid PAN number (AAAAA9999A) on this document. Please upload a clearer scan.' 
+      };
     }
-    // If no number found, we let it pass for manual HR review
-    return { valid: true, message: 'PAN uploaded for manual review.' };
+
+    if (!foundPans.includes(normalExpected)) {
+      return { 
+        valid: false, 
+        message: `Identity Mismatch: The uploaded document contains PAN ${foundPans[0]}, but your profile says ${expectedNumber}.` 
+      };
+    }
+
+    return { valid: true, message: 'PAN number verified.' };
   }
 
-  return { valid: true, message: 'Document successfully uploaded.' };
+  return { valid: true, message: 'Document successfully verified.' };
 }
 
 module.exports = { validateIdentityDocument };
