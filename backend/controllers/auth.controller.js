@@ -116,7 +116,8 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 24 * 60 * 60 * 1000,
+      path: '/'
     };
     res.cookie('accessToken', accessToken, cookieOptions);
     res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
@@ -135,8 +136,15 @@ exports.refreshToken = async (req, res) => {
     const token = req.cookies.refreshToken;
     if (!token) return res.status(401).json({ success: false, message: 'No session' });
 
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
+    };
+
     // Clear the current refresh token cookie
-    res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'none' });
+    res.clearCookie('refreshToken', cookieOptions);
 
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.id);
@@ -164,6 +172,7 @@ exports.refreshToken = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
     };
 
     res.cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 });
