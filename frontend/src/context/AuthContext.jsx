@@ -16,7 +16,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    fetchMe();
+    const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+    const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path));
+    
+    if (!isPublicPath) {
+      fetchMe();
+    } else {
+      setLoading(false);
+    }
   }, [fetchMe]);
 
   const login = async (credentials) => {

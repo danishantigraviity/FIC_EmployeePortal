@@ -23,22 +23,33 @@ api.interceptors.response.use(
   res => res,
   async err => {
     const original = err.config;
+    
+    // If it's a 401 and not a retry and not a refresh-token call
     if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/refresh-token')) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
-          .then(() => api(original));
+          .then(() => api(original))
+          .catch(e => Promise.reject(e));
       }
+
       original._retry = true;
       isRefreshing = true;
+
       try {
         await api.post('/auth/refresh-token');
+        isRefreshing = false;
         processQueue(null);
         return api(original);
       } catch (refreshErr) {
+        isRefreshing = false;
         processQueue(refreshErr, null);
-        window.location.href = '/login';
+        
+        // Prevent infinite loop if already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshErr);
-      } finally { isRefreshing = false; }
+      }
     }
     if (err.response?.status === 500) {
       toast.error('Server error. Please try again later.');
