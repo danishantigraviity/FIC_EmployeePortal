@@ -16,8 +16,6 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('accessToken');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -28,22 +26,16 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/refresh-token')) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
-          .then(token => { original.headers.Authorization = `Bearer ${token}`; return api(original); });
+          .then(() => api(original));
       }
       original._retry = true;
       isRefreshing = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const { data } = await api.post('/auth/refresh-token', { refreshToken });
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-        processQueue(null, data.accessToken);
-        original.headers.Authorization = `Bearer ${data.accessToken}`;
+        await api.post('/auth/refresh-token');
+        processQueue(null);
         return api(original);
       } catch (refreshErr) {
         processQueue(refreshErr, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         window.location.href = '/login';
         return Promise.reject(refreshErr);
       } finally { isRefreshing = false; }

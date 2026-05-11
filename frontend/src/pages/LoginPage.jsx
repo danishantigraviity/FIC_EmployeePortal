@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
+import LoadingButton from '../components/common/LoadingButton';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -137,21 +138,12 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all transform active:scale-[0.98] shadow-xl shadow-blue-900/10 hover:shadow-blue-900/20 disabled:opacity-70 flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #0D2B6B, #1A4FA0)' }}
+            <LoadingButton 
+              loading={loading}
+              className="w-full py-4 rounded-2xl text-sm font-bold"
             >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Authenticating...
-                </>
-              ) : (
-                'Sign In to Portal'
-              )}
-            </button>
+              Sign In to Portal
+            </LoadingButton>
           </form>
 
           <div className="mt-10 pt-8 border-t border-slate-100">

@@ -1,30 +1,31 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Auth pages
+// Auth pages (eagerly load login for speed)
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 // Layouts
-import AdminLayout from './components/layout/AdminLayout';
-import OnboardingLayout from './components/layout/OnboardingLayout';
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const OnboardingLayout = lazy(() => import('./components/layout/OnboardingLayout'));
 
 // Admin pages
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminEmployees from './pages/admin/AdminEmployees';
-import AdminEmployeeDetail from './pages/admin/AdminEmployeeDetail';
-import AdminApprovals from './pages/admin/AdminApprovals';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminEmployees = lazy(() => import('./pages/admin/AdminEmployees'));
+const AdminEmployeeDetail = lazy(() => import('./pages/admin/AdminEmployeeDetail'));
+const AdminApprovals = lazy(() => import('./pages/admin/AdminApprovals'));
 
 // Employee onboarding pages
-import OnboardingHome from './pages/employee/OnboardingHome';
-import ProfilePage from './pages/ProfilePage';
-import EducationPage from './pages/EducationPage';
-import ExperiencePage from './pages/ExperiencePage';
-import DocumentsPage from './pages/DocumentsPage';
-import BankDetailsPage from './pages/BankDetailsPage';
+const OnboardingHome = lazy(() => import('./pages/employee/OnboardingHome'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const EducationPage = lazy(() => import('./pages/EducationPage'));
+const ExperiencePage = lazy(() => import('./pages/ExperiencePage'));
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
+const BankDetailsPage = lazy(() => import('./pages/BankDetailsPage'));
 
 // ── ROUTE GUARDS ──────────────────────────────────────────────────────────────
 
@@ -86,37 +87,39 @@ export default function App() {
             success: { iconTheme: { primary: '#1A4FA0', secondary: '#fff' } },
           }}
         />
-        <Routes>
-          {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+        <Suspense fallback={<Spinner />}>
+          <Routes>
+            {/* Public */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Root → smart redirect */}
-          <Route path="/" element={<RootRedirect />} />
+            {/* Root → smart redirect */}
+            <Route path="/" element={<RootRedirect />} />
 
-          {/* ── ADMIN DASHBOARD ── */}
-          <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="employees" element={<AdminEmployees />} />
-            <Route path="employees/:id" element={<AdminEmployeeDetail />} />
-            <Route path="approvals" element={<AdminApprovals />} />
-          </Route>
+            {/* ── ADMIN DASHBOARD ── */}
+            <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="employees" element={<AdminEmployees />} />
+              <Route path="employees/:id" element={<AdminEmployeeDetail />} />
+              <Route path="approvals" element={<AdminApprovals />} />
+            </Route>
 
-          {/* ── EMPLOYEE ONBOARDING ── */}
-          <Route path="/onboarding" element={<EmployeeGuard><OnboardingLayout /></EmployeeGuard>}>
-            <Route index element={<OnboardingHome />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="education" element={<EducationPage />} />
-            <Route path="experience" element={<ExperiencePage />} />
-            <Route path="documents" element={<DocumentsPage />} />
-            <Route path="bank" element={<BankDetailsPage />} />
-          </Route>
+            {/* ── EMPLOYEE ONBOARDING ── */}
+            <Route path="/onboarding" element={<EmployeeGuard><OnboardingLayout /></EmployeeGuard>}>
+              <Route index element={<OnboardingHome />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="education" element={<EducationPage />} />
+              <Route path="experience" element={<ExperiencePage />} />
+              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="bank" element={<BankDetailsPage />} />
+            </Route>
 
-          {/* Catch-all */}
-          <Route path="*" element={<RootRedirect />} />
-        </Routes>
+            {/* Catch-all */}
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import Select from '../../components/common/Select';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import toast from 'react-hot-toast';
+import SkeletonLoader from '../../components/common/SkeletonLoader';
+import LoadingButton from '../../components/common/LoadingButton';
 
 const STATUS_BADGE = {
   approved:   { bg: '#ECFDF5', text: '#065F46', dot: '#10B981' },
@@ -151,12 +153,18 @@ export default function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <StatCard label="Total" value={stats.total} color="#1A4FA0" />
-        <StatCard label="Approved" value={stats.approved} color="#059669" />
-        <StatCard label="Pending" value={stats.pending} color="#D97706" />
-        <StatCard label="Rejected" value={stats.rejected} color="#DC2626" />
-        <StatCard label="Invited" value={stats.invited} color="#7C3AED" />
-        <StatCard label="Registered" value={stats.registered} color="#8B5CF6" />
+        {loading ? (
+          <SkeletonLoader count={5} type="rect" className="h-24" />
+        ) : (
+          <>
+            <StatCard label="Total" value={stats.total} color="#1A4FA0" />
+            <StatCard label="Approved" value={stats.approved} color="#059669" />
+            <StatCard label="Pending" value={stats.pending} color="#D97706" />
+            <StatCard label="Rejected" value={stats.rejected} color="#DC2626" />
+            <StatCard label="Invited" value={stats.invited} color="#7C3AED" />
+            <StatCard label="Registered" value={stats.registered} color="#8B5CF6" />
+          </>
+        )}
       </div>
 
       {/* Quick Nav Cards */}
@@ -207,8 +215,8 @@ export default function AdminDashboard() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin w-10 h-10 border-4 rounded-full" style={{ borderColor: '#E6F1FB', borderTopColor: '#1A4FA0' }} />
+            <div className="p-6 space-y-4">
+              <SkeletonLoader count={5} type="rect" className="h-16" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
@@ -377,21 +385,12 @@ export default function AdminDashboard() {
                 </div>
               ))}
               <div className="flex gap-4 pt-4">
-                <button type="submit" disabled={inviting}
-                  className="flex-1 py-4 text-sm font-bold text-white rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                  style={{ background: 'linear-gradient(135deg, #1A4FA0, #2563EB)' }}>
-                  {inviting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Sending Invite...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                      <span>Send Invitation</span>
-                    </>
-                  )}
-                </button>
+                <LoadingButton 
+                  loading={inviting}
+                  className="flex-1 py-4 text-sm font-bold"
+                >
+                  Send Invitation
+                </LoadingButton>
                 <button type="button" onClick={() => setShowInvite(false)} disabled={inviting}
                   className="px-6 py-4 text-sm font-bold text-slate-500 border-2 border-slate-100 rounded-2xl hover:bg-slate-50 transition-colors">
                   Cancel

@@ -6,6 +6,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const compression = require('compression');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth.routes');
@@ -29,12 +33,17 @@ app.all('/', (req, res) => res.json({
   timestamp: new Date().toISOString()
 }));
 
-// Security
+// Security & Optimization Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: false,
-  frameguard: false, // Allow iframe embedding for PDF previewer
+  frameguard: false, 
 }));
+
+app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
+app.use(xss()); // Data sanitization against XSS
+app.use(hpp()); // Prevent HTTP Parameter Pollution
+app.use(compression()); // Compress all responses
 
 // Robust CORS
 const allowedOrigins = [

@@ -112,13 +112,21 @@ exports.login = async (req, res) => {
     if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
 
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('accessToken', accessToken, { 
+      httpOnly: true, 
+      secure: true, // Always true for production-grade
+      sameSite: 'none', // Needed for cross-origin if Vercel/Render are on different domains
+      maxAge: 24 * 60 * 60 * 1000 
+    });
+    res.cookie('refreshToken', refreshToken, { 
+      httpOnly: true, 
+      secure: true, 
+      sameSite: 'none', 
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    });
 
     res.status(200).json({
       success: true,
-      accessToken,
-      refreshToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, status: user.status, profileCompletion: user.profileCompletion, completedSteps: user.completedSteps }
     });
   } catch (err) {
@@ -128,23 +136,40 @@ exports.login = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken || req.body.refreshToken;
-    if (!token) return res.status(401).json({ success: false, message: 'No refresh token' });
+    const token = req.cookies.refreshToken;
+    if (!token) return res.status(401).json({ success: false, message: 'No session' });
+
+    // Clear the current refresh token cookie
+    res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'none' });
 
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.id);
-    if (!user || !user.refreshTokens.includes(token)) return res.status(401).json({ success: false, message: 'Invalid refresh token' });
 
+    // Refresh Token Reuse Detection
+    if (!user || !user.refreshTokens.includes(token)) {
+      // If token is missing from user array but was verified, it might be a stolen token
+      if (user) {
+        user.refreshTokens = []; // Clear all tokens (Force logout)
+        await user.save();
+      }
+      return res.status(403).json({ success: false, message: 'Security breach detected. Please login again.' });
+    }
+
+    // Rotate tokens
     user.refreshTokens = user.refreshTokens.filter(t => t !== token);
-    const newRefresh = generateRefreshToken(user._id);
-    user.refreshTokens.push(newRefresh);
+    const newAccessToken = generateAccessToken(user._id, user.role);
+    const newRefreshToken = generateRefreshToken(user._id);
+
+    user.refreshTokens.push(newRefreshToken);
+    if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
 
-    const accessToken = generateAccessToken(user._id, user.role);
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
-    res.json({ success: true, accessToken, refreshToken: newRefresh });
+    res.cookie('accessToken', newAccessToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    res.json({ success: true });
   } catch (err) {
-    res.status(401).json({ success: false, message: 'Refresh token invalid' });
+    res.status(401).json({ success: false, message: 'Session expired' });
   }
 };
 

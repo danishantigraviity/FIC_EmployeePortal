@@ -16,26 +16,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) fetchMe(); else setLoading(false);
-
-    // Safety timeout: if loading is still true after 10s, force it to false
-    const timer = setTimeout(() => setLoading(false), 10000);
-    return () => clearTimeout(timer);
+    fetchMe();
   }, [fetchMe]);
 
   const login = async (credentials) => {
     const { data } = await authAPI.login(credentials);
-    localStorage.setItem('accessToken', data.accessToken);
-    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     setUser(data.user);
     return data.user;
   };
 
   const logout = async () => {
     try { await authAPI.logout(); } catch {}
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
     setUser(null);
   };
 
