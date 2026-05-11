@@ -3,6 +3,7 @@ import { adminAPI, authAPI } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import Select from '../../components/common/Select';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import Loader from '../../components/common/Loader';
 import toast from 'react-hot-toast';
 
 const STATUS_BADGE = {
@@ -207,8 +208,8 @@ export default function AdminDashboard() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin w-10 h-10 border-4 rounded-full" style={{ borderColor: '#E6F1FB', borderTopColor: '#1A4FA0' }} />
+            <div className="py-20">
+              <Loader message="Syncing employee database..." />
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">

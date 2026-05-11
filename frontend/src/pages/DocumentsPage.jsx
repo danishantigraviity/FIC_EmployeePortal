@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { documentAPI, profileAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 
 const DOC_TYPES = [
@@ -273,28 +274,11 @@ export default function DocumentsPage() {
 
                 {/* Uploading progress & AI Scanning Status */}
                 {isUploading && (
-                  <div className="mb-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
-                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                          {doc.identity ? 'AI OCR Processing…' : 'Secure Uploading…'}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                        Do not refresh
-                      </span>
-                    </div>
-                    
-                    <div className="w-full h-1.5 bg-blue-50 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-full animate-[progress_2s_ease-in-out_infinite]" />
-                    </div>
-
-                    {doc.identity && (
-                      <p className="text-[9px] text-blue-500/80 font-medium leading-relaxed italic text-center">
-                        Detecting layout, verifying government markers, and matching ID numbers…
-                      </p>
-                    )}
+                  <div className="mb-4">
+                    <Loader 
+                      size="sm" 
+                      message={doc.identity ? 'AI OCR Processing...' : 'Secure Uploading...'} 
+                    />
                   </div>
                 )}
 
