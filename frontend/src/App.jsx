@@ -3,23 +3,23 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Auth pages (eagerly load login for speed)
-import LoginPage from './pages/LoginPage';
+// Auth pages (Lazy loaded)
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
-// Layouts
+// Layouts (Lazy loaded)
 const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
 const OnboardingLayout = lazy(() => import('./components/layout/OnboardingLayout'));
 
-// Admin pages
+// Admin pages (Lazy loaded)
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminEmployees = lazy(() => import('./pages/admin/AdminEmployees'));
 const AdminEmployeeDetail = lazy(() => import('./pages/admin/AdminEmployeeDetail'));
 const AdminApprovals = lazy(() => import('./pages/admin/AdminApprovals'));
 
-// Employee onboarding pages
+// Employee onboarding pages (Lazy loaded)
 const OnboardingHome = lazy(() => import('./pages/employee/OnboardingHome'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const EducationPage = lazy(() => import('./pages/EducationPage'));

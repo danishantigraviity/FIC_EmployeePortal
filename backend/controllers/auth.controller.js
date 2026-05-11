@@ -112,25 +112,13 @@ exports.login = async (req, res) => {
     if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
 
-    const isProd = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true, // Force secure for all deployed envs
-      sameSite: 'none', // Force none to support Vercel/Render cross-site
-      maxAge: 24 * 60 * 60 * 1000,
-      path: '/'
-    };
-    
-    // Fallback for local dev without HTTPS
-    if (process.env.NODE_ENV === 'development') {
-      cookieOptions.secure = false;
-      cookieOptions.sameSite = 'lax';
-    }
-    res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('accessToken', accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     res.status(200).json({
       success: true,
+      accessToken,
+      refreshToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, status: user.status, profileCompletion: user.profileCompletion, completedSteps: user.completedSteps }
     });
   } catch (err) {
@@ -140,62 +128,49 @@ exports.login = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
-    if (!token) return res.status(401).json({ success: false, message: 'No session' });
-
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      path: '/'
-    };
-    if (process.env.NODE_ENV === 'development') {
-      cookieOptions.secure = false;
-      cookieOptions.sameSite = 'lax';
-    }
-
-    // Clear the current refresh token cookie
-    res.clearCookie('refreshToken', cookieOptions);
+    const token = req.cookies.refreshToken || req.body.refreshToken;
+    if (!token) return res.status(401).json({ success: false, message: 'No refresh token' });
 
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.id);
-
-    // Refresh Token Reuse Detection
+    
+    // Check if token exists in user's valid tokens
     if (!user || !user.refreshTokens.includes(token)) {
-      // If token is missing from user array but was verified, it might be a stolen token
+      // Possible token reuse attack! Invalidate ALL tokens for this user for safety
       if (user) {
-        user.refreshTokens = []; // Clear all tokens (Force logout)
+        user.refreshTokens = [];
         await user.save();
       }
-      return res.status(403).json({ success: false, message: 'Security breach detected. Please login again.' });
+      return res.status(401).json({ success: false, message: 'Invalid refresh token - security alert' });
     }
 
-    // Rotate tokens
+    // ROTATION: Remove old token, generate new ones
     user.refreshTokens = user.refreshTokens.filter(t => t !== token);
+    
+    const { sendTokens } = require('../utils/jwt.utils');
+    // sendTokens will generate new Access & Refresh tokens, 
+    // set cookies, and save the new refresh token to the user object if we modify it first.
+    // However, sendTokens doesn't save to DB. We need to do that manually or adjust sendTokens.
+    
     const newAccessToken = generateAccessToken(user._id, user.role);
     const newRefreshToken = generateRefreshToken(user._id);
-
+    
     user.refreshTokens.push(newRefreshToken);
-    if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
 
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      path: '/'
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
     };
-    if (process.env.NODE_ENV === 'development') {
-      cookieOptions.secure = false;
-      cookieOptions.sameSite = 'lax';
-    }
 
-    res.cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 });
+    res.cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
     res.cookie('refreshToken', newRefreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
-    res.json({ success: true });
+    res.json({ success: true, accessToken: newAccessToken, refreshToken: newRefreshToken });
   } catch (err) {
-    res.status(401).json({ success: false, message: 'Session expired' });
+    res.status(401).json({ success: false, message: 'Refresh token invalid' });
   }
 };
 

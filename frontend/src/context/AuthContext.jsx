@@ -16,14 +16,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
-    const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path));
-    
-    if (!isPublicPath) {
-      fetchMe();
-    } else {
-      setLoading(false);
-    }
+    // Attempt to fetch user on mount (cookies will be sent automatically)
+    fetchMe();
+
+    // Safety timeout: if loading is still true after 10s, force it to false
+    const timer = setTimeout(() => setLoading(false), 10000);
+    return () => clearTimeout(timer);
   }, [fetchMe]);
 
   const login = async (credentials) => {

@@ -16,6 +16,8 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.request.use(config => {
+  // No more manual Authorization header from localStorage!
+  // withCredentials: true handles the HTTP-only cookies automatically.
   return config;
 });
 
@@ -23,33 +25,24 @@ api.interceptors.response.use(
   res => res,
   async err => {
     const original = err.config;
-    
-    // If it's a 401 and not a retry and not a login/refresh-token call
-    if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/refresh-token') && !original.url.includes('/auth/login')) {
+    if (err.response?.status === 401 && !original._retry && !original.url.includes('/auth/refresh-token')) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
-          .then(() => api(original))
-          .catch(e => Promise.reject(e));
+          .then(token => { original.headers.Authorization = `Bearer ${token}`; return api(original); });
       }
-
       original._retry = true;
       isRefreshing = true;
-
       try {
+        // refreshToken is now in an HTTP-only cookie, so we don't need to pass it in the body.
+        // The backend will read it from cookies.
         await api.post('/auth/refresh-token');
-        isRefreshing = false;
         processQueue(null);
         return api(original);
       } catch (refreshErr) {
-        isRefreshing = false;
         processQueue(refreshErr, null);
-        
-        // Prevent infinite loop if already on login page
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
+        window.location.href = '/login';
         return Promise.reject(refreshErr);
-      }
+      } finally { isRefreshing = false; }
     }
     if (err.response?.status === 500) {
       toast.error('Server error. Please try again later.');

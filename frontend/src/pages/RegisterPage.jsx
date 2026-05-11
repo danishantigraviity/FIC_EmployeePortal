@@ -4,7 +4,6 @@ import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
-import LoadingButton from '../components/common/LoadingButton';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -191,12 +190,21 @@ export default function RegisterPage() {
             </div>
 
             <div className="pt-2">
-              <LoadingButton 
-                loading={loading}
-                className="w-full py-4 rounded-2xl text-sm font-bold"
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all transform active:scale-[0.98] shadow-xl shadow-blue-900/10 hover:shadow-blue-900/20 disabled:opacity-70 flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #0D2B6B, #1A4FA0)' }}
               >
-                Complete Registration
-              </LoadingButton>
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  'Complete Registration'
+                )}
+              </button>
             </div>
             
             <p className="text-[11px] text-center text-slate-400 font-medium leading-relaxed px-4">
