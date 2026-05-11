@@ -35,14 +35,14 @@ exports.getAllUsers = async (req, res) => {
       .select('-password -refreshTokens')
       .sort('-createdAt')
       .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+      .limit(parseInt(limit))
+      .lean();
     
     // Encode MongoDB _id → hashed ID so raw ObjectIDs never appear in URLs
-    const safeUsers = users.map(u => {
-      const obj = u.toObject();
-      obj.hashedId = encodeId(u._id.toString());
-      return obj;
-    });
+    const safeUsers = users.map(u => ({
+      ...u,
+      hashedId: encodeId(u._id.toString())
+    }));
     
     res.json({ success: true, data: safeUsers, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
@@ -120,8 +120,26 @@ exports.getStats = async (req, res) => {
 };
 
 exports.getActivityLogs = async (req, res) => {
-  const logs = await ActivityLog.find().populate('userId', 'name email').populate('performedBy', 'name').sort('-createdAt').limit(50);
-  res.json({ success: true, data: logs });
+  try {
+    const logs = await ActivityLog.find()
+      .populate('userId', 'name email')
+      .populate('performedBy', 'name')
+      .sort('-createdAt')
+      .limit(50)
+      .lean();
+    
+    // Add hashedId to populated users in logs
+    const safeLogs = logs.map(log => {
+      if (log.userId && log.userId._id) {
+        log.userId.hashedId = encodeId(log.userId._id.toString());
+      }
+      return log;
+    });
+
+    res.json({ success: true, data: safeLogs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.generateCompiledPdf = async (req, res) => {

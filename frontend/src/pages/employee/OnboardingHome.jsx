@@ -47,7 +47,7 @@ const STATUS_CONFIG = {
   registered: { label: 'Profile Setup',    color: '#8B5CF6', bg: '#F5F3FF',  msg: 'You are in the process of completing your onboarding. Fill in all sections.' },
   pending:    { label: 'Under HR Review',  color: '#D97706', bg: '#FFFBEB',  msg: 'Your profile has been submitted and is being reviewed by HR. We\'ll notify you soon.' },
   approved:   { label: 'Approved!',        color: '#059669', bg: '#ECFDF5',  msg: 'Congratulations! Your profile has been approved. Welcome to Forge India!' },
-  rejected:   { label: 'Action Required',  color: '#DC2626', bg: '#FEF2F2',  msg: 'Your profile needs updates. Please review and re-submit your information.' },
+  rejected:   { label: 'Action Required',  color: '#DC2626', bg: '#FEF2F2',  msg: 'Your profile needs updates. Please review the feedback below and re-submit.' },
 };
 
 export default function OnboardingHome() {
@@ -55,6 +55,7 @@ export default function OnboardingHome() {
   const [submitting, setSubmitting] = useState(false);
   const completion = user?.profileCompletion || 0;
   const status = STATUS_CONFIG[user?.status] || STATUS_CONFIG.registered;
+  const displayMsg = user?.status === 'rejected' && user?.rejectionReason ? user.rejectionReason : status.msg;
 
   const handleSubmit = async () => {
     if (completion < 100) return toast.error('Please complete all steps to 100% first');
@@ -234,6 +235,22 @@ export default function OnboardingHome() {
                 Great news! Your account has been approved by HR. Welcome aboard! 
                 Please wait for further instructions from your department head regarding your joining date and orientation.
               </p>
+            </div>
+          </div>
+        )}
+        {user?.status === 'rejected' && (
+          <div className="p-6 rounded-[24px] bg-red-50/50 border border-red-100 flex gap-5 items-start">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center shadow-inner flex-shrink-0">
+              <svg className="w-5 h-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-red-900 text-base mb-1">Revision Required</h4>
+              <p className="text-red-800/80 text-sm leading-relaxed mb-3">
+                The HR department has reviewed your application and requested changes.
+              </p>
+              <div className="p-4 rounded-xl bg-white border border-red-200 text-sm font-medium text-red-900 shadow-sm italic">
+                "{user?.rejectionReason || 'No specific reason provided. Please contact HR for details.'}"
+              </div>
             </div>
           </div>
         )}

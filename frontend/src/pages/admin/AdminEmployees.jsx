@@ -116,9 +116,11 @@ export default function AdminEmployees() {
               )}
               {!loading && users.map(u => {
                 const sb = STATUS_BADGE[u.status] || STATUS_BADGE.invited;
-                const linkId = u.hashedId || u._id; // prefer hashed, fallback to raw
+                const linkId = u.hashedId; 
+                if (!linkId) return null; // Safety check for secure routing
+
                 return (
-                  <tr key={u.hashedId || u._id} className="border-t border-gray-50 hover:bg-blue-50/20 transition group">
+                  <tr key={linkId} className="border-t border-gray-50 hover:bg-blue-50/20 transition group">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"

@@ -15,7 +15,28 @@ const fs = require('fs');
 const path = require('path');
 const Tesseract = require('tesseract.js');
 const sharp = require('sharp');
-const pdfParse = require('pdf-parse');
+const pdfParseModule = require('pdf-parse');
+/**
+ * Universal PDF Parser Bridge
+ * Handles various versions and export formats (ESM/CJS/Classes)
+ */
+let pdfParse = null;
+if (typeof pdfParseModule === 'function') {
+  pdfParse = pdfParseModule;
+} else if (pdfParseModule && typeof pdfParseModule.default === 'function') {
+  pdfParse = pdfParseModule.default;
+} else if (pdfParseModule && pdfParseModule.PDFParse) {
+  // Handle the 'Module' class-based version detected in some environments
+  pdfParse = async (buffer) => {
+    try {
+      const instance = new pdfParseModule.PDFParse();
+      return await instance.parse(buffer);
+    } catch (e) {
+      console.error('[documentValidator] PDFParse class failure:', e.message);
+      throw e;
+    }
+  };
+}
 
 // ─── Verhoeff Algorithm for Aadhaar Checksum ──────────────────────────────────
 const d = [
@@ -74,20 +95,60 @@ const normaliseAadhaar = (num) => num.replace(/[\s\-]/g, '');
 
 // ─── OCR & Extraction ─────────────────────────────────────────────────────────
 
-async function extractTextFromImage(filePath) {
+/**
+ * Pre-processes an image to improve OCR accuracy.
+ * Converts to grayscale, increases contrast, and applies thresholding.
+ */
+async function enhanceImageForOcr(filePath) {
   try {
-    const { data: { text } } = await Tesseract.recognize(filePath, 'eng', {
-      logger: m => console.log(`[OCR] ${m.status}: ${Math.round(m.progress * 100)}%`)
+    const outputPath = path.join(path.dirname(filePath), `enhanced_${path.basename(filePath)}`);
+    await sharp(filePath)
+      .grayscale() // Remove color noise
+      .normalize() // Stretch contrast
+      .sharpen()   // Make text edges crisp
+      .toFile(outputPath);
+    return outputPath;
+  } catch (err) {
+    console.warn('[documentValidator] Image enhancement failed, using original:', err.message);
+    return filePath;
+  }
+}
+
+async function extractTextFromImage(filePath) {
+  let processedPath = null;
+  try {
+    // 1. Enhance the image for better OCR results
+    processedPath = await enhanceImageForOcr(filePath);
+
+    // 2. Run OCR with English + Hindi support
+    const { data: { text } } = await Tesseract.recognize(processedPath, 'eng+hin', {
+      logger: m => {
+        if (m.status === 'recognizing text' && m.progress % 0.2 === 0) {
+          console.log(`[OCR] Progress: ${Math.round(m.progress * 100)}%`);
+        }
+      }
     });
+
+    // 3. Cleanup temp processed file
+    if (processedPath !== filePath && fs.existsSync(processedPath)) {
+      fs.unlinkSync(processedPath);
+    }
+
     return text || '';
   } catch (err) {
     console.error('[documentValidator] Image OCR failed:', err.message);
+    if (processedPath && processedPath !== filePath && fs.existsSync(processedPath)) {
+      fs.unlinkSync(processedPath);
+    }
     return '';
   }
 }
 
 async function extractPdfText(filePath) {
   try {
+    if (typeof pdfParse !== 'function') {
+      throw new Error('PDF parser not properly initialized');
+    }
     const buffer = fs.readFileSync(filePath);
     const data = await pdfParse(buffer, { max: 3 });
     return data.text || '';
@@ -160,7 +221,8 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
   const lowerText = text.toLowerCase();
 
   // Strict Rejection for random images/selfies
-  if (!text || text.trim().length < 15) {
+  // We've reduced the length requirement slightly but check for any valid character
+  if (!text || text.trim().length < 10) {
     return { 
       valid: false, 
       message: 'No meaningful text detected. Please ensure you are uploading a clear scan of your ID card, not a random photo or selfie.' 

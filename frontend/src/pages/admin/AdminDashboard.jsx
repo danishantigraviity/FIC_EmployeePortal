@@ -96,7 +96,7 @@ export default function AdminDashboard() {
     const tid = toast.loading('Purging employee data...');
     try {
       await adminAPI.deleteUser(deleteId);
-      setUsers(prev => prev.filter(u => u._id !== deleteId));
+      setUsers(prev => prev.filter(u => u.hashedId !== deleteId));
       setStats(prev => ({ ...prev, total: prev.total - 1 }));
       toast.success('Employee record permanently removed', { id: tid });
       setShowDelete(false);
@@ -228,8 +228,11 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-gray-50">
                   {filtered.map(u => {
                     const sb = STATUS_BADGE[u.status] || STATUS_BADGE.invited;
+                    const linkId = u.hashedId; // Strictly use hashedId for security
+                    if (!linkId) return null; // Safety check
+                    
                     return (
-                      <tr key={u._id} className="hover:bg-blue-50/20 transition group">
+                      <tr key={linkId} className="hover:bg-blue-50/20 transition group">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm"
@@ -261,7 +264,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-end gap-2">
                             {u.status === 'approved' && (
                               <button 
-                                onClick={() => handleDownload(u._id, u.name)}
+                                onClick={() => handleDownload(linkId, u.name)}
                                 className="p-2 rounded-xl text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                                 title="Download Dossier"
                               >
@@ -271,13 +274,13 @@ export default function AdminDashboard() {
                                 </svg>
                               </button>
                             )}
-                            <Link to={`/admin/employees/${u._id}`}
+                            <Link to={`/admin/employees/${linkId}`}
                               className="inline-flex items-center gap-1 text-xs px-4 py-2 rounded-xl font-bold transition-all bg-gray-50 text-gray-600 hover:bg-blue-600 hover:text-white shadow-sm"
                             >
                               Details
                             </Link>
                             <button 
-                              onClick={() => { setDeleteId(u._id); setShowDelete(true); }}
+                              onClick={() => { setDeleteId(linkId); setShowDelete(true); }}
                               className="p-2 rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 transition-all"
                               title="Delete Employee"
                             >

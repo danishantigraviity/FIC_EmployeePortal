@@ -121,7 +121,16 @@ exports.login = async (req, res) => {
       success: true,
       accessToken,
       refreshToken,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role, status: user.status, profileCompletion: user.profileCompletion, completedSteps: user.completedSteps }
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role, 
+        status: user.status, 
+        profileCompletion: user.profileCompletion, 
+        completedSteps: user.completedSteps,
+        rejectionReason: user.rejectionReason 
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

@@ -4,6 +4,7 @@ const driveService = require('../services/drive.service');
 const { validateIdentityDocument } = require('../utils/documentValidator');
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 
 const ALLOWED_FIELDS = [
   'aadhaar', 'pan', 'resume', 'profilePhoto',
@@ -85,19 +86,54 @@ exports.uploadDocument = async (req, res) => {
       }
     }
 
-    // ── 4. Upload to Google Drive ─────────────────────────────────────────────
+    // ── 4. Image Optimization & Drive Upload ──────────────────────────────────
     let fileUrl = '';
     let driveId = '';
+    let uploadPath = localPath;
+    let isOptimized = false;
 
     try {
-      const driveResult = await driveService.uploadToDrive(localPath, filename, mimetype);
+      // Optimize images before upload to save space and improve performance
+      if (mimetype.startsWith('image/') && fieldname !== 'resume') {
+        const optimizedName = `opt_${filename}`;
+        const optimizedPath = path.join(path.dirname(localPath), optimizedName);
+        
+        const transformer = sharp(localPath);
+        const metadata = await transformer.metadata();
+        
+        // Resize if too large (max width 1600px)
+        if (metadata.width > 1600) {
+          transformer.resize(1600);
+        }
+
+        // Special handling for profile photo: crop to square
+        if (fieldname === 'profilePhoto') {
+          transformer.resize(400, 400, { fit: 'cover' });
+        }
+
+        await transformer
+          .jpeg({ quality: 80, progressive: true, mozjpeg: true }) // Standardize to high-quality compressed JPEG
+          .toFile(optimizedPath);
+        
+        uploadPath = optimizedPath;
+        isOptimized = true;
+      }
+
+      const driveResult = await driveService.uploadToDrive(uploadPath, filename, isOptimized ? 'image/jpeg' : mimetype);
+      
       if (driveResult) {
         fileUrl = driveResult.viewLink;
         driveId = driveResult.driveId;
       } else {
         throw new Error('Google Drive upload returned empty result');
       }
+
+      // Cleanup optimized temp file if created
+      if (isOptimized && fs.existsSync(uploadPath)) {
+        fs.unlinkSync(uploadPath);
+      }
     } catch (uploadErr) {
+      if (isOptimized && fs.existsSync(uploadPath)) fs.unlinkSync(uploadPath);
       fs.existsSync(localPath) && fs.unlinkSync(localPath);
       return res.status(500).json({ success: false, message: 'File storage failed: ' + uploadErr.message });
     }

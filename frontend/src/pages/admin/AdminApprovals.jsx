@@ -17,7 +17,9 @@ export default function AdminApprovals() {
   }, []);
 
   const handleAction = async (u, status) => {
-    const linkId = u.hashedId || u._id;
+    const linkId = u.hashedId;
+    if (!linkId) return;
+    
     if (status === 'rejected' && !rejReason[linkId]?.trim()) {
       toast.error('Please provide a reason for rejection');
       return;
@@ -25,7 +27,7 @@ export default function AdminApprovals() {
     setActionLoading(p => ({ ...p, [linkId]: status }));
     try {
       await adminAPI.verifyUser(linkId, { status, rejectionReason: rejReason[linkId] || '' });
-      setUsers(l => l.filter(emp => (emp.hashedId || emp._id) !== linkId));
+      setUsers(l => l.filter(emp => emp.hashedId !== linkId));
       toast.success(`Employee ${status} successfully.`);
     } catch (err) { toast.error(err.response?.data?.message || 'Action failed'); }
     finally { setActionLoading(p => ({ ...p, [linkId]: null })); }
