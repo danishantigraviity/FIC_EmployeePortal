@@ -112,13 +112,20 @@ exports.login = async (req, res) => {
     if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
 
+    const isProd = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: true, // Force secure for all deployed envs
+      sameSite: 'none', // Force none to support Vercel/Render cross-site
       maxAge: 24 * 60 * 60 * 1000,
       path: '/'
     };
+    
+    // Fallback for local dev without HTTPS
+    if (process.env.NODE_ENV === 'development') {
+      cookieOptions.secure = false;
+      cookieOptions.sameSite = 'lax';
+    }
     res.cookie('accessToken', accessToken, cookieOptions);
     res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
@@ -138,10 +145,14 @@ exports.refreshToken = async (req, res) => {
 
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: true,
+      sameSite: 'none',
       path: '/'
     };
+    if (process.env.NODE_ENV === 'development') {
+      cookieOptions.secure = false;
+      cookieOptions.sameSite = 'lax';
+    }
 
     // Clear the current refresh token cookie
     res.clearCookie('refreshToken', cookieOptions);
@@ -167,6 +178,17 @@ exports.refreshToken = async (req, res) => {
     user.refreshTokens.push(newRefreshToken);
     if (user.refreshTokens.length > 5) user.refreshTokens = user.refreshTokens.slice(-5);
     await user.save();
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/'
+    };
+    if (process.env.NODE_ENV === 'development') {
+      cookieOptions.secure = false;
+      cookieOptions.sameSite = 'lax';
+    }
 
     res.cookie('accessToken', newAccessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 });
     res.cookie('refreshToken', newRefreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });

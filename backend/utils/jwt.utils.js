@@ -12,10 +12,15 @@ exports.sendTokens = (user, statusCode, res) => {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/'
   };
+
+  if (process.env.NODE_ENV === 'development') {
+    cookieOptions.secure = false;
+    cookieOptions.sameSite = 'lax';
+  }
 
   res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 24 * 60 * 60 * 1000 });
   res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
