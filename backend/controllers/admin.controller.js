@@ -12,6 +12,7 @@ const {
 const ActivityLog = require('../models/ActivityLog.model');
 const pdfService = require('../services/pdf.service');
 const driveService = require('../services/drive.service');
+const { encodeId } = require('../utils/idHash');
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -35,7 +36,15 @@ exports.getAllUsers = async (req, res) => {
       .sort('-createdAt')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-    res.json({ success: true, data: users, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
+    
+    // Encode MongoDB _id → hashed ID so raw ObjectIDs never appear in URLs
+    const safeUsers = users.map(u => {
+      const obj = u.toObject();
+      obj.hashedId = encodeId(u._id.toString());
+      return obj;
+    });
+    
+    res.json({ success: true, data: safeUsers, pagination: { total, page: parseInt(page), pages: Math.ceil(total / limit) } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
@@ -49,7 +58,9 @@ exports.getUserDetail = async (req, res) => {
       Education.find({ userId: req.params.id }),
       Experience.find({ userId: req.params.id }),
     ]);
-    res.json({ success: true, data: { user, profile, docs, education, experience } });
+    const userObj = user.toObject();
+    userObj.hashedId = encodeId(user._id.toString());
+    res.json({ success: true, data: { user: userObj, profile, docs, education, experience } });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 

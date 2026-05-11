@@ -16,18 +16,19 @@ export default function AdminApprovals() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleAction = async (id, status) => {
-    if (status === 'rejected' && !rejReason[id]?.trim()) {
+  const handleAction = async (u, status) => {
+    const linkId = u.hashedId || u._id;
+    if (status === 'rejected' && !rejReason[linkId]?.trim()) {
       toast.error('Please provide a reason for rejection');
       return;
     }
-    setActionLoading(p => ({ ...p, [id]: status }));
+    setActionLoading(p => ({ ...p, [linkId]: status }));
     try {
-      await adminAPI.verifyUser(id, { status, rejectionReason: rejReason[id] || '' });
-      setUsers(l => l.filter(u => u._id !== id));
+      await adminAPI.verifyUser(linkId, { status, rejectionReason: rejReason[linkId] || '' });
+      setUsers(l => l.filter(emp => (emp.hashedId || emp._id) !== linkId));
       toast.success(`Employee ${status} successfully.`);
     } catch (err) { toast.error(err.response?.data?.message || 'Action failed'); }
-    finally { setActionLoading(p => ({ ...p, [id]: null })); }
+    finally { setActionLoading(p => ({ ...p, [linkId]: null })); }
   };
 
   if (loading) return (
@@ -59,8 +60,10 @@ export default function AdminApprovals() {
         </div>
       ) : (
         <div className="space-y-4">
-          {users.map(u => (
-            <div key={u._id} className="group bg-white rounded-3xl border border-gray-100 p-6 transition-all hover:border-blue-100 hover:shadow-lg shadow-blue-900/5">
+          {users.map(u => {
+            const linkId = u.hashedId || u._id;
+            return (
+            <div key={linkId} className="group bg-white rounded-3xl border border-gray-100 p-6 transition-all hover:border-blue-100 hover:shadow-lg shadow-blue-900/5">
               <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                 
                 {/* Profile info */}
@@ -82,7 +85,7 @@ export default function AdminApprovals() {
                       <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${u.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700'}`}>
                         {u.status === 'pending' ? 'Awaiting Review' : 'In Progress'}
                       </span>
-                      <Link to={`/admin/employees/${u._id}`} 
+                      <Link to={`/admin/employees/${linkId}`} 
                         className="text-xs font-bold text-blue-600 hover:underline uppercase tracking-wider">
                         View Full Profile
                       </Link>
@@ -95,28 +98,29 @@ export default function AdminApprovals() {
                   <div className="flex flex-col gap-2">
                     <input 
                       placeholder="Reason (if rejecting)..." 
-                      value={rejReason[u._id] || ''} 
-                      onChange={e => setRejReason(p => ({ ...p, [u._id]: e.target.value }))}
+                      value={rejReason[linkId] || ''} 
+                      onChange={e => setRejReason(p => ({ ...p, [linkId]: e.target.value }))}
                       className="text-xs border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-red-400 focus:ring-4 focus:ring-red-50 w-full sm:w-48 transition bg-gray-50/50" 
                     />
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleAction(u._id, 'approved')} disabled={!!actionLoading[u._id]}
+                    <button onClick={() => handleAction(u, 'approved')} disabled={!!actionLoading[linkId]}
                       className="flex-1 px-6 py-2.5 rounded-xl font-bold text-xs text-white transition active:scale-95 disabled:opacity-50 shadow-md shadow-green-900/10" 
                       style={{ background: '#059669' }}>
-                      {actionLoading[u._id] === 'approved' ? 'Approving...' : 'Approve'}
+                      {actionLoading[linkId] === 'approved' ? 'Approving...' : 'Approve'}
                     </button>
-                    <button onClick={() => handleAction(u._id, 'rejected')} disabled={!!actionLoading[u._id]}
+                    <button onClick={() => handleAction(u, 'rejected')} disabled={!!actionLoading[linkId]}
                       className="flex-1 px-6 py-2.5 rounded-xl font-bold text-xs text-white transition active:scale-95 disabled:opacity-50 shadow-md shadow-red-900/10" 
                       style={{ background: '#DC2626' }}>
-                      {actionLoading[u._id] === 'rejected' ? 'Rejecting...' : 'Reject'}
+                      {actionLoading[linkId] === 'rejected' ? 'Rejecting...' : 'Reject'}
                     </button>
                   </div>
                 </div>
 
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
     </div>

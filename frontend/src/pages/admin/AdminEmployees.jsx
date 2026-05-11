@@ -116,8 +116,9 @@ export default function AdminEmployees() {
               )}
               {!loading && users.map(u => {
                 const sb = STATUS_BADGE[u.status] || STATUS_BADGE.invited;
+                const linkId = u.hashedId || u._id; // prefer hashed, fallback to raw
                 return (
-                  <tr key={u._id} className="border-t border-gray-50 hover:bg-blue-50/20 transition group">
+                  <tr key={u.hashedId || u._id} className="border-t border-gray-50 hover:bg-blue-50/20 transition group">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
@@ -152,7 +153,7 @@ export default function AdminEmployees() {
                       {new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-5 py-3.5">
-                      <Link to={`/admin/employees/${u._id}`}
+                      <Link to={`/admin/employees/${linkId}`}
                         className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition"
                         style={{ background: '#EFF6FF', color: '#1D4ED8' }}>
                         View Details
