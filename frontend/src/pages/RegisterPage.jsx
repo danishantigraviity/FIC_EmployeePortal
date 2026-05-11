@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import logoImg from '../assets/logo.png';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -71,7 +72,10 @@ export default function RegisterPage() {
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400/10 rounded-full -ml-12 -mb-12 blur-xl" />
           
           <div className="relative z-10">
-            <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="p-1.5 bg-white rounded-lg shadow-md">
+                <img src={logoImg} alt="Logo" className="w-8 h-8 object-contain" />
+              </div>
               <span className="text-3xl font-black tracking-tight" style={{ color: '#FFFFFF' }}>FORGE <span style={{ color: '#F5C518' }}>INDIA</span></span>
             </div>
             <p className="text-blue-100/80 text-xs font-bold uppercase tracking-[0.2em]">Employee Onboarding Portal</p>

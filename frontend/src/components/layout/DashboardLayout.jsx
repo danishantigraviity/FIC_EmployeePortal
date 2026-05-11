@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-import logoImg from '../../assets/FIC.png';
+import logoImg from '../../assets/logo.png';
 
 const Logo = ({ className = "h-8" }) => (
   <img src={logoImg} alt="FIC Logo" className={`${className} w-auto object-contain brightness-110`} />

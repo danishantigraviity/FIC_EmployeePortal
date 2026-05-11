@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import logoImg from '../assets/logo.png';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -39,8 +40,8 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col h-full p-16">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-20 transition hover:scale-105 cursor-pointer">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #1A4FA0, #2563EB)' }}>
-              <span className="text-yellow-400 font-black text-xl">F</span>
+            <div className="p-2 bg-white rounded-xl shadow-lg shadow-blue-900/20">
+              <img src={logoImg} alt="Forge India Logo" className="w-10 h-10 object-contain" />
             </div>
             <span className="text-2xl font-black text-white tracking-tight">FORGE <span className="text-[#F5C518]">INDIA</span></span>
           </div>

@@ -53,7 +53,10 @@ const sendMail = async (to, subject, html) => {
 exports.sendRegistrationEmail = async (email, name, token) => {
   const url = `${getFrontendUrl()}/register?token=${token}`;
   const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px">
+    <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
+      <div style="margin-bottom:20px;text-align:center">
+        <img src="${getFrontendUrl()}/logo.png" alt="Forge India" style="height:50px;width:auto" />
+      </div>
       <h2 style="color:#0D2B6B">Welcome to Forge India, ${name}!</h2>
       <p>You have been invited to complete your employee onboarding.</p>
       <a href="${url}" style="background:#1A4FA0;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px;display:inline-block;margin:16px 0">
@@ -107,7 +110,10 @@ exports.sendDriveSyncEmail = async (email, name, driveLink) => {
 
 exports.sendOTPEmail = async (email, otp) => {
   const html = `
-    <div style="font-family:sans-serif;padding:20px;max-width:600px">
+    <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
+      <div style="margin-bottom:20px;text-align:center">
+        <img src="${getFrontendUrl()}/logo.png" alt="Forge India" style="height:50px;width:auto" />
+      </div>
       <h2 style="color:#0D2B6B">Your Verification Code</h2>
       <p style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#1A4FA0">${otp}</p>
       <p style="color:#999;font-size:12px">This code expires in 10 minutes.</p>
@@ -119,6 +125,9 @@ exports.sendPasswordResetEmail = async (email, name, token) => {
   const url = `${getFrontendUrl()}/reset-password?token=${token}`;
   const html = `
     <div style="font-family:sans-serif;padding:20px;max-width:600px;border:1px solid #eee;border-radius:12px">
+      <div style="margin-bottom:20px;text-align:center">
+        <img src="${getFrontendUrl()}/logo.png" alt="Forge India" style="height:50px;width:auto" />
+      </div>
       <h2 style="color:#0D2B6B;margin-top:0">Password Reset Request</h2>
       <p>Hello ${name},</p>
       <p>We received a request to reset your password for the Forge India Employee Portal.</p>
