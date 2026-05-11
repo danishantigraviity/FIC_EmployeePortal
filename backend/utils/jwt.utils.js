@@ -12,8 +12,8 @@ exports.sendTokens = (user, statusCode, res) => {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax', // Use lax for cross-domain support
+    secure: true, // Must be true for SameSite: None
+    sameSite: 'none', // Required for cross-site Vercel -> Render requests
     path: '/',
   };
 
