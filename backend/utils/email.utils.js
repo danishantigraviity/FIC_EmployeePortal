@@ -151,3 +151,21 @@ exports.sendPasswordResetEmail = async (email, name, token) => {
   `);
   return sendMail(email, 'Reset Your Password - Forge India', html);
 };
+
+exports.sendPdfReadyEmail = async (email, name) => {
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1">Documents Compiled</h1>
+    <p class="p">Hello ${name},<br>Your onboarding documents have been successfully compiled into a single PDF.</p>
+    <p class="p">The HR team can now review your complete application.</p>
+  `);
+  return sendMail(email, 'Documents Ready - Forge India', html);
+};
+
+exports.sendDriveSyncEmail = async (email, name, link) => {
+  const html = EMAIL_LAYOUT(`
+    <h1 class="h1">Backup Created</h1>
+    <p class="p">Hello ${name},<br>A secure backup of your compiled documents has been synced to Google Drive.</p>
+    <a href="${link}" class="btn">View on Drive</a>
+  `);
+  return sendMail(email, 'Backup Synced - Forge India', html);
+};

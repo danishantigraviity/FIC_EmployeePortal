@@ -32,7 +32,8 @@ exports.uploadToDrive = async (filePath, fileName, mimeType = 'application/pdf')
     const response = await drive.files.create({
       resource: fileMetadata,
       media: media,
-      fields: 'id, webViewLink'
+      fields: 'id, webViewLink',
+      supportsAllDrives: true // Important for shared drives
     });
 
     console.log(`✅ File created on Drive. ID: ${response.data.id}`);
@@ -44,7 +45,8 @@ exports.uploadToDrive = async (filePath, fileName, mimeType = 'application/pdf')
         resource: {
           role: 'reader',
           type: 'anyone',
-        }
+        },
+        supportsAllDrives: true
       });
     } catch (permErr) {
       console.warn('⚠️ Could not set public permissions on Drive file:', permErr.message);
@@ -85,7 +87,11 @@ exports.downloadFromDrive = async (fileId) => {
   
   try {
     const response = await drive.files.get(
-      { fileId: fileId, alt: 'media' },
+      { 
+        fileId: fileId, 
+        alt: 'media',
+        supportsAllDrives: true
+      },
       { responseType: 'arraybuffer' }
     );
     return Buffer.from(response.data);
