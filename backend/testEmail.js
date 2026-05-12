@@ -7,10 +7,9 @@ const testEmail = async () => {
   
   try {
     // Testing the most complex template (Sync)
-    const info = await emailService.sendDriveSyncEmail(
+    const info = await emailService.sendOTPEmail(
       recipient, 
-      'Test User', 
-      'https://drive.google.com/test'
+      '123456'
     );
     console.log('✅ Success! Message ID:', info.messageId);
     console.log('📬 Check your inbox for the premium template!');
