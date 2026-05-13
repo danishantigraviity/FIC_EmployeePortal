@@ -11,7 +11,7 @@ const STATUS_BADGE = {
   registered: { bg: '#F5F3FF', text: '#5B21B6', dot: '#8B5CF6' },
 };
 
-const DEPARTMENTS = ['Engineering', 'HR', 'Finance', 'Sales', 'Operations', 'Marketing', 'Legal'];
+const DEPARTMENTS = ['IT', 'Sales', 'Finance', 'Insurance', 'Banking', 'Business Associate', 'HR'];
 
 export default function AdminEmployees() {
   const [users, setUsers] = useState([]);

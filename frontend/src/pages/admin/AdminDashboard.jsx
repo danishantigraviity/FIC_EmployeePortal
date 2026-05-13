@@ -6,6 +6,8 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import Loader from '../../components/common/Loader';
 import toast from 'react-hot-toast';
 
+const DEPARTMENTS = ['IT', 'Sales', 'Finance', 'Insurance', 'Banking', 'Business Associate', 'HR'];
+
 const STATUS_BADGE = {
   approved:   { bg: '#ECFDF5', text: '#065F46', dot: '#10B981' },
   pending:    { bg: '#FFFBEB', text: '#92400E', dot: '#F59E0B' },
@@ -365,7 +367,6 @@ export default function AdminDashboard() {
                 { key: 'name', label: 'Full Name', type: 'text', ph: 'e.g. Danish P', req: true, icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
                 { key: 'email', label: 'Work Email', type: 'email', ph: 'name@company.com', req: true, icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
                 { key: 'phone', label: 'Phone Number', type: 'tel', ph: '10-digit mobile', req: true, icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
-                { key: 'department', label: 'Department', type: 'text', ph: 'e.g. Engineering', req: false, icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5' },
               ].map(({ key, label, type, ph, req, icon }) => (
                 <div key={key} className="relative">
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">{label} {req && <span className="text-rose-500">*</span>}</label>
@@ -380,6 +381,16 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+
+              <div className="relative">
+                <Select
+                  label="Department"
+                  value={inviteForm.department}
+                  onChange={v => setInviteForm(p => ({ ...p, department: v }))}
+                  options={DEPARTMENTS.map(d => ({ label: d, value: d }))}
+                  placeholder="Select Department"
+                />
+              </div>
               <div className="flex gap-4 pt-4">
                 <button type="submit" disabled={inviting}
                   className="flex-1 py-4 text-sm font-bold text-white rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
