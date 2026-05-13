@@ -92,7 +92,10 @@ const Select = memo(({
             </div>
           )}
 
-          <div className="max-h-72 overflow-y-auto custom-scrollbar p-1">
+          <div 
+            className="max-h-[280px] overflow-y-auto custom-scrollbar p-1 scroll-smooth"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt) => {
                 const isActive = value === opt.value;

@@ -6,7 +6,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 import Loader from '../../components/common/Loader';
 import toast from 'react-hot-toast';
 
-const DEPARTMENTS = ['IT', 'Sales', 'Finance', 'Insurance', 'Banking', 'Business Associate', 'HR'];
+const DEPARTMENTS = ['IT', 'Sales', 'Finance', 'Insurance', 'Banking', 'Business Associate', 'HR', 'Other'];
 
 const STATUS_BADGE = {
   approved:   { bg: '#ECFDF5', text: '#065F46', dot: '#10B981' },
@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [filters, setFilters] = useState({ search: '', status: '' });
   const [showInvite, setShowInvite] = useState(false);
   const [inviteForm, setInviteForm] = useState({ name: '', email: '', phone: '', department: '' });
+  const [customDept, setCustomDept] = useState('');
   const [inviting, setInviting] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -71,7 +72,18 @@ export default function AdminDashboard() {
     const loadingToast = toast.loading('Sending invitation email...');
     
     try {
-      const res = await authAPI.createInvite(inviteForm);
+      const payload = { 
+        ...inviteForm, 
+        department: inviteForm.department === 'Other' ? customDept : inviteForm.department 
+      };
+
+      if (inviteForm.department === 'Other' && !customDept.trim()) {
+        toast.dismiss(loadingToast);
+        setInviting(false);
+        return toast.error('Please enter the department name');
+      }
+
+      const res = await authAPI.createInvite(payload);
       toast.dismiss(loadingToast);
       
       if (res.data.emailWarning) {
@@ -82,6 +94,7 @@ export default function AdminDashboard() {
       
       setShowInvite(false);
       setInviteForm({ name: '', email: '', phone: '', department: '' });
+      setCustomDept('');
       loadData();
     } catch (err) {
       toast.dismiss(loadingToast);
@@ -389,6 +402,25 @@ export default function AdminDashboard() {
                 options={DEPARTMENTS.map(d => ({ label: d, value: d }))}
                 placeholder="Select department"
               />
+
+              {inviteForm.department === 'Other' && (
+                <div className="animate-in slide-in-from-top-2 duration-300">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Custom Department <span className="text-rose-500">*</span></label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-500 transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"/></svg>
+                    </div>
+                    <input 
+                      type="text" 
+                      value={customDept} 
+                      onChange={e => setCustomDept(e.target.value)}
+                      placeholder="Enter department name" 
+                      required
+                      disabled={inviting}
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 transition-all font-medium placeholder:text-slate-400" />
+                  </div>
+                </div>
+              )}
 
               {[
                 { key: 'phone', label: 'Phone Number', type: 'tel', ph: '10-digit mobile', req: true, icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' },
