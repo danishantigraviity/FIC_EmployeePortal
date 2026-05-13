@@ -71,7 +71,7 @@ const Select = memo(({
       </div>
 
       {isOpen && (
-        <div className={`absolute z-[100] mt-1.5 bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_-10px_rgba(0,0,0,0.1)] animate-in fade-in zoom-in-95 duration-200 origin-top ${
+        <div className={`absolute z-[9999] mt-1.5 bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_-10px_rgba(0,0,0,0.1)] animate-in fade-in zoom-in-95 duration-200 origin-top ${
           isCompact ? 'w-56 right-0' : 'w-full min-w-[220px]'
         }`}>
           {isSearchable && options.length > 5 && (
@@ -93,7 +93,7 @@ const Select = memo(({
           )}
 
           <div 
-            className="max-h-[280px] overflow-y-auto custom-scrollbar p-1 scroll-smooth"
+            className="max-h-[240px] sm:max-h-[320px] overflow-y-auto custom-scrollbar p-1.5 scroll-smooth overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {filteredOptions.length > 0 ? (
@@ -106,7 +106,7 @@ const Select = memo(({
                       onChange(opt.value);
                       setIsOpen(false);
                     }}
-                    className={`group/opt px-3 py-2 text-xs cursor-pointer transition-all flex items-center justify-between rounded-lg mb-0.5 last:mb-0 ${
+                    className={`group/opt px-3 py-2.5 text-xs cursor-pointer transition-all flex items-center justify-between rounded-lg mb-0.5 last:mb-0 ${
                       isActive 
                         ? 'bg-blue-50 text-blue-700 font-bold' 
                         : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
@@ -114,11 +114,11 @@ const Select = memo(({
                   >
                     <span>{opt.label}</span>
                     {isActive ? (
-                       <svg className="w-3.5 h-3.5 text-blue-600 animate-in zoom-in duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                       <svg className="w-4 h-4 text-blue-600 animate-in zoom-in duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
                     ) : (
-                      <svg className="w-3 h-3 text-slate-300 opacity-0 group-hover/opt:opacity-100 transition-all -translate-x-1 group-hover/opt:translate-x-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover/opt:opacity-100 transition-all -translate-x-1 group-hover/opt:translate-x-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" />
                       </svg>
                     )}
@@ -126,10 +126,11 @@ const Select = memo(({
                 );
               })
             ) : (
-              <div className="px-4 py-6 text-center">
+              <div className="px-4 py-8 text-center">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No matching options</p>
               </div>
             )}
+            <div className="h-1" />
           </div>
         </div>
       )}
