@@ -43,7 +43,9 @@ export default function ResetPassword() {
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/5">
             <img src={logoImg} alt="Forge India" className="w-10 h-10 object-contain" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 font-poppins tracking-tight">Create New Password</h2>
+          <h2 className="text-3xl font-bold font-poppins tracking-tight">
+            <span style={{ color: '#0D2B6B' }}>Create</span> <span style={{ color: '#F5C518' }}>New Password</span>
+          </h2>
           <p className="text-slate-400 text-sm mt-2">Choose a strong, secure password for your employee account.</p>
         </div>
 
