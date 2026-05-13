@@ -1,3 +1,4 @@
+console.log('--- SERVER STARTUP SEQUENCE ---');
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -11,6 +12,8 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const compression = require('compression');
 require('dotenv').config();
+
+console.log('--- CONFIG LOADED ---');
 
 const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
