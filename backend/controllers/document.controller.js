@@ -93,7 +93,26 @@ exports.uploadDocument = async (req, res) => {
     let isOptimized = false;
 
     try {
-      // Optimize images before upload to save space and improve performance
+      // 4a. Get User & Profile details for structured naming
+      const User = require('../models/User.model');
+      const user = await User.findById(req.user.id);
+      
+      // Sanitize name for filename (e.g., "Danish_P")
+      const sanitizedName = user.name.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      const displayField = fieldname.charAt(0).toUpperCase() + fieldname.slice(1).replace(/([A-Z])/g, ' $1');
+      const cleanFieldName = displayField.replace(/\s+/g, '');
+      
+      // Construct clean readable filename: Danish_P_AadhaarCard.pdf
+      const extension = path.extname(filename) || (mimetype.startsWith('image/') ? '.jpg' : '.pdf');
+      const structuredFileName = `${sanitizedName}_${cleanFieldName}${extension}`;
+
+      // 4b. Get or Create Employee Folder
+      // Folder name: "Danish_P (EMP123)" or "Danish_P (email@domain.com)"
+      const folderSuffix = user.employeeId || user.email;
+      const employeeFolderName = `${sanitizedName} (${folderSuffix})`;
+      const employeeFolderId = await driveService.getOrCreateFolder(employeeFolderName);
+
+      // 4c. Optimize images before upload
       if (mimetype.startsWith('image/') && fieldname !== 'resume') {
         const optimizedName = `opt_${filename}`;
         const optimizedPath = path.join(path.dirname(localPath), optimizedName);
@@ -101,25 +120,24 @@ exports.uploadDocument = async (req, res) => {
         const transformer = sharp(localPath);
         const metadata = await transformer.metadata();
         
-        // Resize if too large (max width 1600px)
-        if (metadata.width > 1600) {
-          transformer.resize(1600);
-        }
-
-        // Special handling for profile photo: crop to square
-        if (fieldname === 'profilePhoto') {
-          transformer.resize(400, 400, { fit: 'cover' });
-        }
+        if (metadata.width > 1600) transformer.resize(1600);
+        if (fieldname === 'profilePhoto') transformer.resize(400, 400, { fit: 'cover' });
 
         await transformer
-          .jpeg({ quality: 80, progressive: true, mozjpeg: true }) // Standardize to high-quality compressed JPEG
+          .jpeg({ quality: 80, progressive: true, mozjpeg: true })
           .toFile(optimizedPath);
         
         uploadPath = optimizedPath;
         isOptimized = true;
       }
 
-      const driveResult = await driveService.uploadToDrive(uploadPath, filename, isOptimized ? 'image/jpeg' : mimetype);
+      // 4d. Upload to the employee-specific folder
+      const driveResult = await driveService.uploadToDrive(
+        uploadPath, 
+        structuredFileName, 
+        isOptimized ? 'image/jpeg' : mimetype,
+        employeeFolderId
+      );
       
       if (driveResult) {
         fileUrl = driveResult.viewLink;
@@ -135,6 +153,7 @@ exports.uploadDocument = async (req, res) => {
     } catch (uploadErr) {
       if (isOptimized && fs.existsSync(uploadPath)) fs.unlinkSync(uploadPath);
       fs.existsSync(localPath) && fs.unlinkSync(localPath);
+      console.error('Drive Upload Error:', uploadErr);
       return res.status(500).json({ success: false, message: 'File storage failed: ' + uploadErr.message });
     }
 

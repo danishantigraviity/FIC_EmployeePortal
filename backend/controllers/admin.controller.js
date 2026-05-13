@@ -228,9 +228,21 @@ exports.syncCompiledPdfToDrive = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Local PDF file not found on server' });
     }
 
-    // Upload to Drive
-    const fileName = path.basename(fullPath);
-    const driveResult = await driveService.uploadToDrive(fullPath, fileName);
+    // 4. Get User details for structured naming & folder
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Sanitize name for filename (e.g., "Danish_P")
+    const sanitizedName = user.name.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    const structuredFileName = `${sanitizedName}_Compiled_Onboarding_Documents.pdf`;
+
+    // 5. Get or Create Employee Folder
+    const folderSuffix = user.employeeId || user.email;
+    const employeeFolderName = `${sanitizedName} (${folderSuffix})`;
+    const employeeFolderId = await driveService.getOrCreateFolder(employeeFolderName);
+
+    // 6. Upload to Drive
+    const driveResult = await driveService.uploadToDrive(fullPath, structuredFileName, 'application/pdf', employeeFolderId);
 
     if (!driveResult) {
       throw new Error('Drive upload failed - no result returned');
