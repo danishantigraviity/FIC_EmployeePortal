@@ -96,52 +96,58 @@ const normaliseAadhaar = (num) => num.replace(/[\s\-]/g, '');
 // ─── OCR & Extraction ─────────────────────────────────────────────────────────
 
 /**
- * Pre-processes an image to improve OCR accuracy.
- * Converts to grayscale, increases contrast, and applies thresholding.
+ * Pre-processes an image to improve OCR accuracy and performance.
+ * - Resizes to max 1200px (faster OCR, less memory)
+ * - Grayscale + Normalize + Sharpen
  */
 async function enhanceImageForOcr(filePath) {
   try {
-    const outputPath = path.join(path.dirname(filePath), `enhanced_${path.basename(filePath)}`);
-    await sharp(filePath)
-      .grayscale() // Remove color noise
-      .normalize() // Stretch contrast
-      .sharpen()   // Make text edges crisp
+    const outputPath = path.join(path.dirname(filePath), `enhanced_${path.basename(filePath)}.png`);
+    
+    const transformer = sharp(filePath);
+    const metadata = await transformer.metadata();
+
+    // Downscale if too large (mobile photos are often 4000px+, slowing OCR)
+    if (metadata.width > 1200) {
+      transformer.resize(1200);
+    }
+
+    await transformer
+      .grayscale()
+      .normalize()
+      .sharpen()
+      .png({ quality: 90 }) // PNG is often better for OCR than JPEG
       .toFile(outputPath);
+
     return outputPath;
   } catch (err) {
-    console.warn('[documentValidator] Image enhancement failed, using original:', err.message);
+    console.warn('[documentValidator] Image enhancement failed:', err.message);
     return filePath;
   }
 }
 
-async function extractTextFromImage(filePath) {
-  let processedPath = null;
-  try {
-    // 1. Enhance the image for better OCR results
-    processedPath = await enhanceImageForOcr(filePath);
-
-    // 2. Run OCR with English + Hindi support
-    const { data: { text } } = await Tesseract.recognize(processedPath, 'eng+hin', {
-      logger: m => {
-        if (m.status === 'recognizing text' && m.progress % 0.2 === 0) {
-          console.log(`[OCR] Progress: ${Math.round(m.progress * 100)}%`);
-        }
-      }
-    });
-
-    // 3. Cleanup temp processed file
-    if (processedPath !== filePath && fs.existsSync(processedPath)) {
-      fs.unlinkSync(processedPath);
-    }
-
-    return text || '';
-  } catch (err) {
-    console.error('[documentValidator] Image OCR failed:', err.message);
-    if (processedPath && processedPath !== filePath && fs.existsSync(processedPath)) {
-      fs.unlinkSync(processedPath);
-    }
-    return '';
+/**
+ * Normalizes text to handle common OCR misreads (e.g., 'O' vs '0', 'I' vs '1')
+ */
+function fuzzyNormalize(text, type = 'alphanumeric') {
+  if (!text) return '';
+  let clean = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  
+  // PAN Logic: AAAAA 9999 A
+  if (type === 'pan' && clean.length >= 10) {
+    // If we have something like ABCDE12O4F, fix the 'O' to '0'
+    const lettersPart1 = clean.slice(0, 5).replace(/0/g, 'O').replace(/1/g, 'I');
+    const numbersPart = clean.slice(5, 9).replace(/O/g, '0').replace(/I/g, '1').replace(/S/g, '5');
+    const lettersPart2 = clean.slice(9, 10).replace(/0/g, 'O').replace(/1/g, 'I');
+    return lettersPart1 + numbersPart + lettersPart2;
   }
+  
+  // Aadhaar Logic: 12 digits
+  if (type === 'aadhaar') {
+    return clean.replace(/O/g, '0').replace(/I/g, '1').replace(/S/g, '5').replace(/B/g, '8');
+  }
+
+  return clean;
 }
 
 async function extractPdfText(filePath) {
@@ -158,45 +164,6 @@ async function extractPdfText(filePath) {
   }
 }
 
-async function checkImageQuality(filePath) {
-  try {
-    const metadata = await sharp(filePath).metadata();
-    const stats = fs.statSync(filePath);
-    
-    // 1. Resolution Check
-    if (metadata.width < 600 || metadata.height < 400) {
-      return { valid: false, message: 'Resolution is too low. Please upload a clear, high-resolution scan (minimum 600px width).' };
-    }
-
-    // 2. Aspect Ratio Check (Heuristic for Mobile Screenshots)
-    // Most modern phones have tall aspect ratios (e.g., 9:19.5, 9:20). 
-    // Genuine ID cards are usually landscape (approx 1.5:1) or scanned on A4.
-    const ratio = metadata.height / metadata.width;
-    if (ratio > 1.8 || ratio < 0.3) {
-      return { 
-        valid: false, 
-        message: 'This looks like a mobile screenshot or a cropped image. Please upload a full, original scan of the document.' 
-      };
-    }
-
-    // 3. Blur/Quality Heuristic (Size-to-Resolution Density)
-    // A 1080p image should be at least 150-200KB if it has detail. 
-    // If it's very small, it's likely extremely blurred or highly compressed.
-    const pixels = metadata.width * metadata.height;
-    const density = stats.size / pixels; 
-    if (density < 0.05) { // Very rough heuristic: less than 0.05 bytes per pixel is usually poor quality
-      return { 
-        valid: false, 
-        message: 'The image quality is too low or blurred. Please upload a sharp, high-quality photo of your original card.' 
-      };
-    }
-
-    return { valid: true };
-  } catch (err) {
-    return { valid: false, message: 'Could not process image for quality check.' };
-  }
-}
-
 // ─── Main validator ───────────────────────────────────────────────────────────
 /**
  * Validates an uploaded file for a given document type.
@@ -209,71 +176,89 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
     return { valid: false, message: 'Unsupported file type. Please upload JPG, PNG, or PDF.' };
   }
 
-  // ─── 1. Extract Text ────────────────────────────────────────────────────────
-  let text = '';
-  try {
-    if (isImage) {
-      const processedPath = await enhanceImageForOcr(filePath);
-      const { data: { text: ocrResult } } = await Tesseract.recognize(processedPath || filePath, 'eng+hin');
-      text = ocrResult || '';
-      if (processedPath && processedPath !== filePath && fs.existsSync(processedPath)) fs.unlinkSync(processedPath);
-    } else {
-      text = await extractPdfText(filePath);
-    }
-  } catch (err) {
-    console.error('[documentValidator] OCR extraction failed:', err.message);
-    return { valid: false, message: 'Document processing failed. Please try again with a clearer file.' };
+  const normalExpected = expectedNumber ? expectedNumber.replace(/[\s\-]/g, '').toUpperCase() : null;
+  if (!normalExpected) {
+    return { valid: false, message: `Please enter your ${fieldname.toUpperCase()} number in your profile before uploading.` };
   }
 
-  const normalExpected = expectedNumber ? normaliseAadhaar(expectedNumber).toUpperCase() : null;
-  if (!normalExpected) {
-    return { valid: false, message: `Please enter your ${fieldname.toUpperCase()} number in your profile before uploading the document.` };
+  // ─── 1. Extract Text ────────────────────────────────────────────────────────
+  let rawText = '';
+  let processedPath = null;
+  try {
+    if (isImage) {
+      processedPath = await enhanceImageForOcr(filePath);
+      // Use 'eng' only for PAN (faster), 'eng+hin' for Aadhaar
+      const lang = fieldname === 'pan' ? 'eng' : 'eng+hin';
+      
+      const { data: { text } } = await Tesseract.recognize(processedPath || filePath, lang);
+      rawText = text || '';
+      
+      if (processedPath && processedPath !== filePath && fs.existsSync(processedPath)) {
+        fs.unlinkSync(processedPath);
+      }
+    } else {
+      rawText = await extractPdfText(filePath);
+    }
+  } catch (err) {
+    if (processedPath && fs.existsSync(processedPath)) fs.unlinkSync(processedPath);
+    console.error('[documentValidator] OCR failed:', err.message);
+    return { valid: false, message: 'Document processing timed out or failed. Please upload a smaller, clearer file.' };
   }
+
+  const text = rawText.toUpperCase();
+  console.log(`[OCR Result] ${fieldname.toUpperCase()}: ${text.substring(0, 100)}...`);
 
   // ─── 2. Aadhaar Matching ───────────────────────────────────────────────────
   if (fieldname === 'aadhaar') {
-    const foundNumbers = [...text.matchAll(AADHAAR_REGEX)].map(m => normaliseAadhaar(m[0]));
-    const validNumbers = foundNumbers.filter(num => validateAadhaarChecksum(num));
+    // Strategy: Look for any 12-digit-like sequence, then fix common OCR errors
+    const potentialAadhaars = text.match(/[A-Z0-9]{4}[\s\-]*[A-Z0-9]{4}[\s\-]*[A-Z0-9]{4}/g) || [];
+    const validNumbers = potentialAadhaars
+      .map(raw => fuzzyNormalize(raw, 'aadhaar'))
+      .filter(num => num.length === 12 && validateAadhaarChecksum(num));
 
     if (validNumbers.length === 0) {
       return { 
         valid: false, 
-        message: 'Could not detect a valid 12-digit Aadhaar number on this document. Please upload a clearer scan.' 
+        message: 'Could not detect a valid 12-digit Aadhaar number. Ensure the card is flat, well-lit, and not blurry.' 
       };
     }
 
     if (!validNumbers.includes(normalExpected)) {
       return { 
         valid: false, 
-        message: `Identity Mismatch: The uploaded document contains Aadhaar ${validNumbers[0]}, but your profile says ${expectedNumber}.` 
+        message: `Identity Mismatch: Uploaded document contains Aadhaar ${validNumbers[0]}, but profile says ${expectedNumber}.` 
       };
     }
 
-    return { valid: true, message: 'Aadhaar number verified.' };
+    return { valid: true, message: 'Aadhaar verified.' };
   }
 
   // ─── 3. PAN Matching ───────────────────────────────────────────────────────
   if (fieldname === 'pan') {
-    const foundPans = [...text.toUpperCase().matchAll(PAN_REGEX)].map(m => m[0]);
+    // Strategy: Look for any 10-char alphanumeric string that resembles a PAN
+    const potentialPans = text.match(/[A-Z0-9]{5}[0-9A-Z]{4}[A-Z0-9]{1}/g) || [];
+    const validPans = potentialPans
+      .map(raw => fuzzyNormalize(raw, 'pan'))
+      .filter(num => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(num));
 
-    if (foundPans.length === 0) {
+    if (validPans.length === 0) {
       return { 
         valid: false, 
-        message: 'Could not detect a valid PAN number (AAAAA9999A) on this document. Please upload a clearer scan.' 
+        message: 'Could not detect a valid PAN number (AAAAA9999A). Please ensure the card is clear and all characters are visible.' 
       };
     }
 
-    if (!foundPans.includes(normalExpected)) {
+    if (!validPans.includes(normalExpected)) {
       return { 
         valid: false, 
-        message: `Identity Mismatch: The uploaded document contains PAN ${foundPans[0]}, but your profile says ${expectedNumber}.` 
+        message: `Identity Mismatch: Uploaded document contains PAN ${validPans[0]}, but profile says ${expectedNumber}.` 
       };
     }
 
-    return { valid: true, message: 'PAN number verified.' };
+    return { valid: true, message: 'PAN verified.' };
   }
 
-  return { valid: true, message: 'Document successfully verified.' };
+  return { valid: true, message: 'Document verified.' };
 }
 
 module.exports = { validateIdentityDocument };
