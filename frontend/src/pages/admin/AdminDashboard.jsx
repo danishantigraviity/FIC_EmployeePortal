@@ -352,8 +352,8 @@ export default function AdminDashboard() {
       {/* Invite Modal */}
       {showInvite && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="bg-slate-50 px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-300">
+            <div className="bg-slate-50 px-8 py-6 border-b border-gray-100 flex items-center justify-between rounded-t-[2rem]">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Employee Invite</h3>
                 <p className="text-xs text-slate-500 mt-1">Generate a secure onboarding link</p>
