@@ -3,6 +3,7 @@ import { Outlet, useLocation, NavLink, useNavigate, Link } from 'react-router-do
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../../assets/logo.png';
+import SupportModal from '../common/SupportModal';
 
 const STEPS = [
   { step: 1, label: 'Personal Profile',   sub: 'Basic & address info',   path: '/onboarding/profile', icon: '👤' },
@@ -26,6 +27,7 @@ const STATUS_MAP = {
 
 export default function OnboardingLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -152,10 +154,16 @@ export default function OnboardingLayout() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-6 border-t border-white/5">
+        <div className="p-6 space-y-3 border-t border-white/5">
+          <button
+            onClick={() => { setIsMenuOpen(false); setShowSupport(true); }}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white/5 text-white/40 border border-white/5 rounded-2xl transition-all duration-300 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-white/10 hover:text-white">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            HR Support
+          </button>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 text-[#0D2B6B] bg-white/10 text-white/80 rounded-2xl transition-all duration-300 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#F5C518] hover:text-[#0D2B6B] hover:shadow-xl hover:shadow-[#F5C518]/20">
+            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white/10 text-white/80 rounded-2xl transition-all duration-300 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-[#F5C518] hover:text-[#0D2B6B] hover:shadow-xl hover:shadow-[#F5C518]/20">
             Sign Out
           </button>
         </div>
@@ -179,7 +187,14 @@ export default function OnboardingLayout() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <button 
+              onClick={() => setShowSupport(true)}
+              className="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-50 text-slate-500 hover:text-[#0D2B6B] hover:bg-blue-50 border border-slate-100 transition-all font-bold text-[10px] uppercase tracking-widest"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              HR Support
+            </button>
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <div className="text-xs font-bold text-slate-800">{user?.name}</div>
@@ -202,6 +217,8 @@ export default function OnboardingLayout() {
           </div>
         </main>
       </div>
+
+      <SupportModal isOpen={showSupport} onClose={() => setShowSupport(false)} />
     </div>
   );
 }

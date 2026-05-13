@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
+import SupportModal from '../components/common/SupportModal';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -23,8 +25,6 @@ export default function LoginPage() {
     } finally { setLoading(false); }
   };
 
-  const FEATURES = [
-    { title: 'Secure Onboarding', desc: 'Enterprise-grade security for employee data.', step: '01' },
   return (
     <div className="min-h-screen flex font-inter bg-[#F8FAFC]">
       {/* ── LEFT PANEL (PREMIUM BRANDING) ── */}
@@ -190,7 +190,7 @@ export default function LoginPage() {
 
             <div className="mt-12 pt-10 border-t border-slate-50 text-center">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-                Trouble signing in? <a href="mailto:support@forgeindia.com" className="text-blue-600 hover:text-blue-700 transition-colors">Request Support</a>
+                Trouble signing in? <button onClick={() => setShowSupport(true)} className="text-blue-600 hover:text-blue-700 transition-colors">HR Support</button>
               </p>
             </div>
           </div>
@@ -200,6 +200,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <SupportModal isOpen={showSupport} onClose={() => setShowSupport(false)} />
     </div>
   );
 }

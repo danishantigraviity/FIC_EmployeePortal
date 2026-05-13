@@ -4,6 +4,7 @@ import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
+import SupportModal from '../components/common/SupportModal';
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(true);
   const [error, setError] = useState('');
+  const [showSupport, setShowSupport] = useState(false);
 
   useEffect(() => {
     if (!token) { setError('No registration token found.'); setValidating(false); return; }
@@ -83,7 +85,7 @@ export default function RegisterPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-black text-white tracking-tighter leading-none">FORGE<span className="text-[#F5C518]">INDIA</span></span>
-              <span className="text-[10px] font-bold text-blue-300/60 uppercase tracking-[0.3em] mt-1">Employee Portal</span>
+              <span className="text-[10px] font-bold text-blue-300/60 uppercase tracking-[0.3em] mt-1">Enterprise Portal</span>
             </div>
           </div>
 
@@ -246,12 +248,17 @@ export default function RegisterPage() {
 
             <div className="mt-12 pt-10 border-t border-slate-50 text-center">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed px-4">
-                By signing up, you agree to our 
-                <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors px-1">Terms</a> and 
-                <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors px-1">Privacy Policy</a>
+                Trouble signing up? <button onClick={() => setShowSupport(true)} className="text-blue-600 hover:text-blue-700 transition-colors">HR Support</button>
               </p>
             </div>
           </div>
+        </div>
+      </div>
+      <SupportModal isOpen={showSupport} onClose={() => setShowSupport(false)} />
+    </div>
+  );
+}
+div>
         </div>
       </div>
     </div>
