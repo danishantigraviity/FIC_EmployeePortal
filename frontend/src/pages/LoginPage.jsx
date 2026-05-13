@@ -90,7 +90,9 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-10">
-            <h2 className="text-3xl font-bold text-slate-900 font-poppins tracking-tight">Welcome back</h2>
+            <h2 className="text-3xl font-bold font-poppins tracking-tight">
+              <span style={{ color: '#0D2B6B' }}>Welcome</span> <span style={{ color: '#F5C518' }}>back</span>
+            </h2>
             <p className="text-slate-400 text-sm mt-2">Access your portal to continue onboarding</p>
           </div>
 
