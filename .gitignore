@@ -35,5 +35,6 @@ backend/uploads/*
 !backend/package-lock.json
 !frontend/package.json
 !frontend/package-lock.json
+!frontend/public/manifest.json
 backend/google-drive-key.json
 client_secret*.json
