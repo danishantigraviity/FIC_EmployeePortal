@@ -71,11 +71,11 @@ const Select = memo(({
       </div>
 
       {isOpen && (
-        <div className={`absolute z-[100] mt-1.5 bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_-10px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top ${
+        <div className={`absolute z-[100] mt-1.5 bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_-10px_rgba(0,0,0,0.1)] animate-in fade-in zoom-in-95 duration-200 origin-top ${
           isCompact ? 'w-56 right-0' : 'w-full min-w-[220px]'
         }`}>
           {isSearchable && options.length > 5 && (
-            <div className="px-3 pb-2 pt-2 border-b border-slate-100 sticky top-0 bg-white/95 backdrop-blur-sm z-10">
+            <div className="px-3 pb-2 pt-2 border-b border-slate-100 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-xl">
               <div className="relative">
                 <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -92,7 +92,7 @@ const Select = memo(({
             </div>
           )}
 
-          <div className="max-h-60 overflow-y-auto custom-scrollbar p-1">
+          <div className="max-h-72 overflow-y-auto custom-scrollbar p-1">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt) => {
                 const isActive = value === opt.value;
