@@ -64,156 +64,199 @@ export default function RegisterPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-[#F8FAFC]" style={{ backgroundImage: 'radial-gradient(at 0% 0%, #E0E7FF 0, transparent 50%), radial-gradient(at 100% 0%, #F1F5F9 0, transparent 50%)' }}>
-      <div className="bg-white rounded-[24px] shadow-2xl shadow-slate-200/50 w-full max-w-[480px] overflow-hidden border border-white">
-        {/* Top Header Section */}
-        <div className="bg-[#0D2B6B] p-8 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400/10 rounded-full -ml-12 -mb-12 blur-xl" />
-          
-          <div className="relative z-10">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <div className="p-1.5 bg-white rounded-lg shadow-md">
-                <img src={logoImg} alt="Logo" className="w-8 h-8 object-contain" />
-              </div>
-              <span className="text-3xl font-black tracking-tight" style={{ color: '#FFFFFF' }}>FORGE <span style={{ color: '#F5C518' }}>INDIA</span></span>
+    <div className="min-h-screen flex font-inter bg-[#F8FAFC]">
+      {/* ── LEFT PANEL (PREMIUM BRANDING) ── */}
+      <div className="hidden lg:flex flex-col w-[42%] relative overflow-hidden bg-[#0D2B6B]">
+        {/* Modern Abstract Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-yellow-400/10 rounded-full blur-[100px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-10 pointer-events-none" 
+               style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '48px 48px' }} />
+        </div>
+        
+        <div className="relative z-10 flex flex-col h-full p-16">
+          {/* Brand Header */}
+          <div className="flex items-center gap-4 mb-24 group transition-all duration-500 hover:translate-x-1">
+            <div className="p-2.5 bg-white rounded-2xl shadow-2xl shadow-blue-900/40">
+              <img src={logoImg} alt="Forge India Logo" className="w-10 h-10 object-contain" />
             </div>
-            <p className="text-blue-100/80 text-xs font-bold uppercase tracking-[0.2em]">Employee Onboarding Portal</p>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black text-white tracking-tighter leading-none">FORGE<span className="text-[#F5C518]">INDIA</span></span>
+              <span className="text-[10px] font-bold text-blue-300/60 uppercase tracking-[0.3em] mt-1">Employee Portal</span>
+            </div>
+          </div>
+
+          {/* Hero Section */}
+          <div className="max-w-md mt-12">
+            <h1 className="text-5xl font-extrabold text-white mb-8 font-poppins leading-[1.15] tracking-tight">
+              Join the <span className="text-[#F5C518] relative">future<span className="absolute bottom-1 left-0 w-full h-1 bg-yellow-400/20 rounded-full" /></span> of Forge India.
+            </h1>
+            <p className="text-blue-100/60 text-lg leading-relaxed font-medium">
+              You've been invited to join our elite workforce. Complete your registration to start your journey with us.
+            </p>
+          </div>
+
+          {/* Registration Info */}
+          <div className="mt-auto space-y-6">
+            <div className="p-6 bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-md">
+              <p className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em] mb-4">Official Invitation</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#F5C518] rounded-2xl flex items-center justify-center text-[#0D2B6B] font-black text-xl shadow-lg">
+                  {userInfo?.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{userInfo?.name}</p>
+                  <p className="text-xs text-blue-200/60 truncate">{userInfo?.email}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 text-blue-300/30 text-[9px] font-black uppercase tracking-[0.4em]">
+            FIC Secure Registration Gateway • v2.0.4
           </div>
         </div>
+      </div>
 
-        <div className="p-8 sm:p-10">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-slate-900 font-poppins tracking-tight">Complete Registration</h1>
-            <p className="text-slate-500 text-sm mt-1.5">Set up your account to access the portal</p>
-          </div>
-
-          {/* Invited User Identity */}
-          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-100 font-bold text-[#0D2B6B] text-lg">
-              {userInfo?.name?.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">{userInfo?.name}</p>
-              <p className="text-xs text-slate-500 truncate">{userInfo?.email}</p>
-            </div>
-            <div className="ml-auto bg-green-50 text-green-600 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-100">
-              Invited
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Phone Input */}
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Phone Number</label>
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none pr-3 border-r border-slate-200">
-                  <svg className="w-5 h-3.5 rounded-[2px] shadow-sm border border-slate-100" viewBox="0 0 640 480">
-                    <rect width="640" height="160" fill="#FF9933" />
-                    <rect y="160" width="640" height="160" fill="#FFFFFF" />
-                    <rect y="320" width="640" height="160" fill="#138808" />
-                    <circle cx="320" cy="240" r="40" fill="none" stroke="#000080" strokeWidth="4"/>
-                  </svg>
-                  <span className="text-sm font-bold text-slate-400">+91</span>
-                </div>
-                <input 
-                  type="tel" 
-                  value={form.phone} 
-                  onChange={e => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                    setForm(p => ({ ...p, phone: val }));
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-24 pr-4 py-4 text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#0D2B6B] focus:ring-4 focus:ring-blue-50 transition-all" 
-                  placeholder="98765 43210" 
-                  required 
-                />
+      {/* ── RIGHT PANEL (REGISTRATION FORM) ── */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+        {/* Subtle background blobs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-[100px] -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-slate-100 rounded-full blur-[80px] -ml-40 -mb-40" />
+        
+        <div className="w-full max-w-[540px] relative">
+          <div className="bg-white rounded-[32px] shadow-[0_32px_80px_-16px_rgba(13,43,107,0.12)] p-10 sm:p-14 border border-slate-50">
+            {/* Mobile Branding */}
+            <div className="lg:hidden flex flex-col items-center mb-12">
+              <div className="p-2 bg-white rounded-xl shadow-lg border border-slate-100 mb-4">
+                <img src={logoImg} alt="Logo" className="w-8 h-8 object-contain" />
               </div>
+              <span className="text-xl font-black tracking-tighter text-[#0D2B6B]">FORGE<span className="text-[#F5C518]">INDIA</span></span>
             </div>
 
-            {/* Password Inputs */}
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Create Password</label>
+            <div className="mb-10">
+              <h2 className="text-3xl font-bold font-poppins tracking-tight text-slate-900">
+                <span style={{ color: '#0D2B6B' }}>Complete</span> <span style={{ color: '#F5C518' }}>Registration</span>
+              </h2>
+              <p className="text-slate-400 text-sm mt-3 font-medium">Set up your secure credentials to access the portal.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-7">
+              {/* Phone Input */}
+              <div className="group">
+                <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Phone Number</label>
                 <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none pr-3 border-r border-slate-200 group-focus-within:border-blue-300 transition-colors">
+                    <svg className="w-5 h-3.5 rounded-[2px] shadow-sm border border-slate-100" viewBox="0 0 640 480">
+                      <rect width="640" height="160" fill="#FF9933" />
+                      <rect y="160" width="640" height="160" fill="#FFFFFF" />
+                      <rect y="320" width="640" height="160" fill="#138808" />
+                      <circle cx="320" cy="240" r="40" fill="none" stroke="#000080" strokeWidth="4"/>
+                    </svg>
+                    <span className="text-sm font-bold text-slate-400 group-focus-within:text-blue-500 transition-colors">+91</span>
+                  </div>
                   <input 
-                    type={showPass ? "text" : "password"} 
-                    value={form.password} 
-                    onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#0D2B6B] focus:ring-4 focus:ring-blue-50 transition-all pr-12" 
-                    placeholder="••••••••" 
+                    type="tel" 
+                    value={form.phone} 
+                    onChange={e => setForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-24 pr-4 py-4 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-slate-300" 
+                    placeholder="98765 43210" 
                     required 
                   />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPass(!showPass)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showPass ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    )}
-                  </button>
-                </div>
-                <div className="mt-2 flex items-center gap-2 px-1">
-                  <div className={`h-1 flex-1 rounded-full ${form.password.length >= 8 ? 'bg-green-400' : 'bg-slate-200'}`} />
-                  <div className={`h-1 flex-1 rounded-full ${form.password.length >= 8 && /[A-Z]/.test(form.password) && /[0-9]/.test(form.password) ? 'bg-green-400' : 'bg-slate-200'}`} />
-                  <div className={`h-1 flex-1 rounded-full ${form.password.length >= 10 ? 'bg-green-400' : 'bg-slate-200'}`} />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Strength</span>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Confirm Password</label>
-                <div className="relative">
-                  <input 
-                    type={showConfirmPass ? "text" : "password"} 
-                    value={form.confirmPassword} 
-                    onChange={e => setForm(p => ({ ...p, confirmPassword: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-semibold text-slate-900 outline-none focus:bg-white focus:border-[#0D2B6B] focus:ring-4 focus:ring-blue-50 transition-all pr-12" 
-                    placeholder="••••••••" 
-                    required 
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowConfirmPass(!showConfirmPass)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showConfirmPass ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                    )}
-                  </button>
+              {/* Password Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="group">
+                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Create Password</label>
+                  <div className="relative">
+                    <input 
+                      type={showPass ? "text" : "password"} 
+                      value={form.password} 
+                      onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all pr-12 placeholder:text-slate-300" 
+                      placeholder="••••••••" 
+                      required 
+                    />
+                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
+                      {showPass ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="group">
+                  <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2.5 ml-1">Confirm Password</label>
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPass ? "text" : "password"} 
+                      value={form.confirmPassword} 
+                      onChange={e => setForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all pr-12 placeholder:text-slate-300" 
+                      placeholder="••••••••" 
+                      required 
+                    />
+                    <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
+                      {showConfirmPass ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="pt-2">
+              {/* Password Strength Indicator */}
+              <div className="flex items-center gap-2 px-1">
+                {[1, 2, 3].map((s, i) => {
+                  const filled = (i === 0 && form.password.length >= 8) || 
+                                (i === 1 && form.password.length >= 8 && /[A-Z]/.test(form.password) && /[0-9]/.test(form.password)) ||
+                                (i === 2 && form.password.length >= 10);
+                  return <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${filled ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]' : 'bg-slate-100'}`} />;
+                })}
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Strength</span>
+              </div>
+
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-4 rounded-2xl text-sm font-bold text-white transition-all transform active:scale-[0.98] shadow-xl shadow-blue-900/10 hover:shadow-blue-900/20 disabled:opacity-70 flex items-center justify-center gap-2"
+                className="w-full py-4.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-white transition-all transform active:scale-[0.98] shadow-2xl shadow-blue-900/20 hover:shadow-blue-900/40 disabled:opacity-70 flex items-center justify-center gap-3 group/btn relative overflow-hidden mt-4"
                 style={{ background: 'linear-gradient(135deg, #0D2B6B, #1A4FA0)' }}
               >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Creating Account...
+                    CREATING ACCOUNT...
                   </>
                 ) : (
-                  'Complete Registration'
+                  <>
+                    COMPLETE REGISTRATION
+                    <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                  </>
                 )}
               </button>
+            </form>
+
+            <div className="mt-12 pt-10 border-t border-slate-50 text-center">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed px-4">
+                By signing up, you agree to our 
+                <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors px-1">Terms</a> and 
+                <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors px-1">Privacy Policy</a>
+              </p>
             </div>
-            
-            <p className="text-[11px] text-center text-slate-400 font-medium leading-relaxed px-4">
-              By completing registration, you agree to the Forge India 
-              <a href="#" className="text-blue-600 hover:underline px-1">Terms of Service</a> and 
-              <a href="#" className="text-blue-600 hover:underline px-1">Privacy Policy</a>.
-            </p>
-          </form>
+          </div>
         </div>
+      </div>
+    </div>
+  );
+}>
       </div>
     </div>
   );
