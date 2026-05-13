@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import logoImg from '../assets/logo.png';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -26,8 +27,8 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-6">
       <div className="w-full max-w-[440px] bg-white rounded-[32px] shadow-2xl shadow-slate-900/10 p-8 sm:p-12 border border-white">
         <div className="mb-10 text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/5">
+            <img src={logoImg} alt="Forge India" className="w-10 h-10 object-contain" />
           </div>
           <h2 className="text-3xl font-bold text-slate-900 font-poppins tracking-tight">Forgot Password?</h2>
           <p className="text-slate-400 text-sm mt-2">No worries! Enter your email and we'll send you a secure link to reset it.</p>

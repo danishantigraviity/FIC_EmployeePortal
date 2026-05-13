@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import logoImg from '../assets/logo.png';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -39,8 +40,8 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-6">
       <div className="w-full max-w-[440px] bg-white rounded-[32px] shadow-2xl shadow-slate-900/10 p-8 sm:p-12 border border-white">
         <div className="mb-10 text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-900/5">
+            <img src={logoImg} alt="Forge India" className="w-10 h-10 object-contain" />
           </div>
           <h2 className="text-3xl font-bold text-slate-900 font-poppins tracking-tight">Create New Password</h2>
           <p className="text-slate-400 text-sm mt-2">Choose a strong, secure password for your employee account.</p>
