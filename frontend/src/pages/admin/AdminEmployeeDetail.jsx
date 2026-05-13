@@ -24,13 +24,18 @@ export default function AdminEmployeeDetail() {
   const [isCompiling, setIsCompiling] = useState(false);
   const [isSyncingDrive, setIsSyncingDrive] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
 
   useEffect(() => {
     adminAPI.getUserDetail(id)
       .then(({ data }) => setDetail(data.data))
       .catch(() => toast.error('Failed to load employee'))
       .finally(() => setLoading(false));
-  }, [id]);
+
+    return () => {
+      if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    };
+  }, [id, pdfBlobUrl]);
 
   const handleVerify = async (status) => {
     if (status === 'rejected' && !reason.trim()) {
@@ -97,26 +102,34 @@ export default function AdminEmployeeDetail() {
     }
   };
 
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    const toastId = toast.loading('Preparing your dossier for download...');
+  const handleDownload = async (previewOnly = false) => {
+    if (!previewOnly) setIsDownloading(true);
+    const toastId = !previewOnly ? toast.loading('Preparing your dossier for download...') : null;
     try {
       const response = await adminAPI.downloadPdf(id);
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const blobUrl = URL.createObjectURL(blob);
+      
+      if (previewOnly) {
+        setPdfBlobUrl(blobUrl);
+        return;
+      }
+
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = `compiled_docs_${detail?.user?.name?.replace(/\s+/g, '_') || id}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
+      // We don't revoke immediately so the preview stays working if needed, 
+      // but usually we'd keep one blobUrl in state
+      setPdfBlobUrl(blobUrl);
       toast.success('Dossier downloaded successfully!', { id: toastId });
     } catch (err) {
       const msg = err.response?.data?.message || 'Download failed. Please try again.';
-      toast.error(msg, { id: toastId });
+      if (!previewOnly) toast.error(msg, { id: toastId });
     } finally {
-      setIsDownloading(false);
+      if (!previewOnly) setIsDownloading(false);
     }
   };
 
@@ -205,6 +218,18 @@ export default function AdminEmployeeDetail() {
           </button>
         ))}
       </div>
+      
+      {/* PDF Loader Effect */}
+      {tab === 'Documents' && docs?.compiledPdf?.url && !pdfBlobUrl && (
+        <div className="hidden">
+          {(() => {
+            if (!pdfBlobUrl && !isDownloading) {
+              handleDownload(true); // Quiet fetch for preview
+            }
+            return null;
+          })()}
+        </div>
+      )}
 
       {/* ── OVERVIEW ── */}
       {tab === 'Overview' && (
@@ -518,16 +543,14 @@ export default function AdminEmployeeDetail() {
                       </div>
                       <iframe 
                         src={
-                          // Use driveId to build the official embeddable preview URL
-                          docs.compiledPdf.driveId
-                            ? `https://drive.google.com/file/d/${docs.compiledPdf.driveId}/preview`
-                            : docs.compiledPdf.url?.includes('drive.google.com')
-                              ? docs.compiledPdf.url.replace('/view', '/preview')
+                          pdfBlobUrl || (
+                            docs.compiledPdf.url?.startsWith('http') 
+                              ? docs.compiledPdf.url 
                               : `${import.meta.env.VITE_API_URL || ''}${docs.compiledPdf.url}`
+                          )
                         }
                         className="w-full h-[600px] bg-white border-0"
                         title="Compiled Document Preview"
-                        allow="autoplay"
                       />
                     </div>
                   </div>
