@@ -1,13 +1,3 @@
-console.log('--- SERVER STARTUP SEQUENCE ---');
-process.on('uncaughtException', (err) => {
-  console.error('❌ UNCAUGHT EXCEPTION:', err.message);
-  console.error(err.stack);
-  process.exit(1);
-});
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ UNHANDLED REJECTION:', reason);
-  process.exit(1);
-});
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -21,8 +11,6 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const compression = require('compression');
 require('dotenv').config();
-
-console.log('--- CONFIG LOADED ---');
 
 const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');

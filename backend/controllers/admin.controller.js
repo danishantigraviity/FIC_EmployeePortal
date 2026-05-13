@@ -259,7 +259,6 @@ exports.syncCompiledPdfToDrive = async (req, res) => {
     );
 
     // Send notification email
-    const user = await User.findById(id);
     if (user) {
       await sendDriveSyncEmail(user.email, user.name, driveResult.viewLink).catch(e => console.error('Email failed:', e.message));
     }
