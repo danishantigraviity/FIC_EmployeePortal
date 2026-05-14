@@ -30,64 +30,9 @@ exports.uploadDocument = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid document field name' });
     }
 
-    // ── 2. Require profile number before identity doc upload ─────────────────
-    let expectedNumber = null;
-    if (IDENTITY_FIELDS.includes(fieldname)) {
-      const Profile = require('../models/Profile.model');
-      const profile = await Profile.findOne({ userId: req.user.id });
+    // ── 2. Identity validation removed as requested ─────────────────────────
 
-      if (!profile) {
-        fs.existsSync(localPath) && fs.unlinkSync(localPath);
-        return res.status(400).json({
-          success: false,
-          message: 'Please complete Step 1 (Profile) before uploading identity documents.'
-        });
-      }
-
-      if (fieldname === 'aadhaar') {
-        if (!profile.aadhaarNumber) {
-          fs.existsSync(localPath) && fs.unlinkSync(localPath);
-          return res.status(400).json({
-            success: false,
-            message: 'Please save your Aadhaar number in Step 1 (Profile) before uploading the Aadhaar Card.'
-          });
-        }
-        expectedNumber = profile.aadhaarNumber;
-      }
-
-      if (fieldname === 'pan') {
-        if (!profile.panNumber) {
-          fs.existsSync(localPath) && fs.unlinkSync(localPath);
-          return res.status(400).json({
-            success: false,
-            message: 'Please save your PAN number in Step 1 (Profile) before uploading the PAN Card.'
-          });
-        }
-        expectedNumber = profile.panNumber;
-      }
-    }
-
-    // ── 3. Run intelligent document validation for identity docs ─────────────
-    if (IDENTITY_FIELDS.includes(fieldname)) {
-      console.log(`[documentController] Starting AI validation for ${fieldname}...`);
-      const validation = await validateIdentityDocument({
-        filePath: localPath,
-        mimetype,
-        fieldname,
-        expectedNumber
-      });
-
-      if (!validation.valid) {
-        console.warn(`[documentController] Validation REJECTED for ${fieldname}: ${validation.message}`);
-        fs.existsSync(localPath) && fs.unlinkSync(localPath);
-        return res.status(422).json({
-          success: false,
-          message: validation.message,
-          validationError: true
-        });
-      }
-      console.log(`[documentController] Validation SUCCESS for ${fieldname}`);
-    }
+    // ── 3. AI validation removed as requested ───────────────────────────────
 
     // ── 4. Image Optimization & Drive Upload ──────────────────────────────────
     let fileUrl = '';
@@ -171,7 +116,7 @@ exports.uploadDocument = async (req, res) => {
         url: fileUrl,
         publicId: driveId || filename,
         uploadedAt: new Date(),
-        validated: IDENTITY_FIELDS.includes(fieldname)
+        validated: false
       }
     };
 

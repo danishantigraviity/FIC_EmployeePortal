@@ -31,20 +31,6 @@ function clientSideIdentityCheck(key, file, profile) {
   const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
   if (!allowed.includes(file.type)) return 'Only JPG, PNG, or PDF files are accepted.';
 
-  if (key === 'aadhaar' && profile) {
-    if (!profile.aadhaarNumber) return 'Save your Aadhaar number in Step 1 (Profile) first.';
-    if (!AADHAAR_RE.test(profile.aadhaarNumber.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim())) {
-      return 'Aadhaar number in your profile appears invalid. Please correct it in Step 1.';
-    }
-  }
-
-  if (key === 'pan' && profile) {
-    if (!profile.panNumber) return 'Save your PAN number in Step 1 (Profile) first.';
-    if (!PAN_RE.test(profile.panNumber.toUpperCase())) {
-      return 'PAN number in your profile appears invalid. Please correct it in Step 1.';
-    }
-  }
-
   return null; // no error
 }
 
@@ -96,17 +82,13 @@ export default function DocumentsPage() {
     const docType = DOC_TYPES.find(d => d.key === key);
 
     // ── Client-side pre-check ─────────────────────────────────────────────────
-    if (docType.identity) {
-      const clientError = clientSideIdentityCheck(key, file, profile);
-      if (clientError) {
-        setErrors(p => ({ ...p, [key]: clientError }));
-        setValState(p => ({ ...p, [key]: 'error' }));
-        toast.error(clientError, { duration: 5000 });
-        // Reset the file input
-        if (inputRefs.current[key]) inputRefs.current[key].value = '';
-        return;
-      }
-      setValState(p => ({ ...p, [key]: 'validating' }));
+    const clientError = clientSideIdentityCheck(key, file, profile);
+    if (clientError) {
+      setErrors(p => ({ ...p, [key]: clientError }));
+      toast.error(clientError, { duration: 5000 });
+      // Reset the file input
+      if (inputRefs.current[key]) inputRefs.current[key].value = '';
+      return;
     }
 
     setUploading(p => ({ ...p, [key]: true }));
@@ -117,19 +99,13 @@ export default function DocumentsPage() {
         profileCompletion: data.profileCompletion,
         completedSteps:    data.completedSteps
       });
-      if (docType.identity) {
-        setValState(p => ({ ...p, [key]: 'valid' }));
-        toast.success(`✅ ${docType.label} validated and uploaded!`);
-      } else {
-        toast.success('Document uploaded successfully');
-      }
+      toast.success('Document uploaded successfully');
       if (data.completedSteps?.documents) {
         toast.success('🎉 All required documents uploaded!');
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Upload failed. Please try again.';
       setErrors(p => ({ ...p, [key]: msg }));
-      if (docType.identity) setValState(p => ({ ...p, [key]: 'error' }));
       toast.error(msg, { duration: 6000 });
       // Reset file input so user can re-select
       if (inputRefs.current[key]) inputRefs.current[key].value = '';
@@ -179,7 +155,7 @@ export default function DocumentsPage() {
             {[
               { t: 'File Size Limit',      d: 'Each file must be under 5 MB.' },
               { t: 'Accepted Formats',     d: 'JPG, PNG, or PDF only.' },
-              { t: 'Identity Validation',  d: 'Aadhaar & PAN are auto-scanned for type and number match.' },
+              { t: 'Identity Documents',   d: 'Aadhaar & PAN cards are uploaded securely.' },
               { t: 'Scanned PDFs',         d: 'If using PDF, ensure it has selectable text. Scanned PDFs should be uploaded as JPG/PNG.' },
             ].map((rule, i) => (
               <div key={i} className="flex items-start gap-4">
@@ -217,7 +193,6 @@ export default function DocumentsPage() {
                   <h4 className="text-[13px] font-bold text-slate-800 tracking-tight">{doc.label}</h4>
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                     {doc.optional ? 'Optional' : 'Required'}
-                    {doc.identity && <span className="ml-2 text-blue-500">• ID Verified</span>}
                   </p>
                 </div>
 
