@@ -277,7 +277,7 @@ export default function DocumentsPage() {
                   <div className="mb-4">
                     <Loader 
                       size="sm" 
-                      message={doc.identity ? 'AI OCR Processing...' : 'Secure Uploading...'} 
+                      message="Securely Uploading..." 
                     />
                   </div>
                 )}
