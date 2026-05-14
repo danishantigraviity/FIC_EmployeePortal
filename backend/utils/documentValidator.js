@@ -135,16 +135,36 @@ function fuzzyNormalize(text, type = 'alphanumeric') {
   
   // PAN Logic: AAAAA 9999 A
   if (type === 'pan' && clean.length >= 10) {
-    // If we have something like ABCDE12O4F, fix the 'O' to '0'
     const lettersPart1 = clean.slice(0, 5).replace(/0/g, 'O').replace(/1/g, 'I');
-    const numbersPart = clean.slice(5, 9).replace(/O/g, '0').replace(/I/g, '1').replace(/S/g, '5');
+    const numbersPart = clean.slice(5, 9)
+      .replace(/O/g, '0')
+      .replace(/I/g, '1')
+      .replace(/S/g, '5')
+      .replace(/G/g, '6')
+      .replace(/B/g, '8')
+      .replace(/Z/g, '2')
+      .replace(/A/g, '4')
+      .replace(/E/g, '3')
+      .replace(/T/g, '1')
+      .replace(/L/g, '1');
     const lettersPart2 = clean.slice(9, 10).replace(/0/g, 'O').replace(/1/g, 'I');
     return lettersPart1 + numbersPart + lettersPart2;
   }
   
   // Aadhaar Logic: 12 digits
   if (type === 'aadhaar') {
-    return clean.replace(/O/g, '0').replace(/I/g, '1').replace(/S/g, '5').replace(/B/g, '8');
+    return clean
+      .replace(/O/g, '0')
+      .replace(/Q/g, '0')
+      .replace(/I/g, '1')
+      .replace(/T/g, '1')
+      .replace(/L/g, '1')
+      .replace(/S/g, '5')
+      .replace(/B/g, '8')
+      .replace(/G/g, '6')
+      .replace(/Z/g, '2')
+      .replace(/A/g, '4')
+      .replace(/E/g, '3');
   }
 
   return clean;
@@ -198,6 +218,14 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
       }
     } else {
       rawText = await extractPdfText(filePath);
+      
+      // Check for scanned PDF (no selectable text)
+      if (isPdf && rawText.trim().length < 10) {
+        return { 
+          valid: false, 
+          message: 'This PDF appears to be a scan with no readable text. Please upload a clear JPG or PNG image of your document instead.' 
+        };
+      }
     }
   } catch (err) {
     if (processedPath && fs.existsSync(processedPath)) fs.unlinkSync(processedPath);
@@ -206,27 +234,32 @@ async function validateIdentityDocument({ filePath, mimetype, fieldname, expecte
   }
 
   const text = rawText.toUpperCase();
-  console.log(`[OCR Result] ${fieldname.toUpperCase()}: ${text.substring(0, 100)}...`);
+  console.log(`[OCR Result] ${fieldname.toUpperCase()} (Raw Text Sample): ${text.substring(0, 150).replace(/\n/g, ' ')}...`);
 
   // ─── 2. Aadhaar Matching ───────────────────────────────────────────────────
   if (fieldname === 'aadhaar') {
     // Strategy: Look for any 12-digit-like sequence, then fix common OCR errors
-    const potentialAadhaars = text.match(/[A-Z0-9]{4}[\s\-]*[A-Z0-9]{4}[\s\-]*[A-Z0-9]{4}/g) || [];
+    // Regex allows for any non-alphanumeric separator between blocks of 4
+    const potentialAadhaars = text.match(/[A-Z0-9]{4}[^A-Z0-9]*[A-Z0-9]{4}[^A-Z0-9]*[A-Z0-9]{4}/g) || [];
+    
     const validNumbers = potentialAadhaars
       .map(raw => fuzzyNormalize(raw, 'aadhaar'))
       .filter(num => num.length === 12 && validateAadhaarChecksum(num));
 
     if (validNumbers.length === 0) {
-      return { 
-        valid: false, 
-        message: 'Could not detect a valid 12-digit Aadhaar number. Ensure the card is flat, well-lit, and not blurry.' 
-      };
+      // Check if any keywords are present to give better feedback
+      const hasKeywords = AADHAAR_KEYWORDS.some(k => text.includes(k.toUpperCase()));
+      const message = hasKeywords 
+        ? 'Aadhaar card detected but the 12-digit number was not readable. Ensure the card is clear, well-lit, and not blurry.'
+        : 'Could not detect a valid Aadhaar number. Ensure you are uploading the correct document and the scan is high quality.';
+      
+      return { valid: false, message };
     }
 
     if (!validNumbers.includes(normalExpected)) {
       return { 
         valid: false, 
-        message: `Identity Mismatch: Uploaded document contains Aadhaar ${validNumbers[0]}, but profile says ${expectedNumber}.` 
+        message: `Identity Mismatch: Uploaded document contains Aadhaar ${validNumbers[0]}, but your profile says ${expectedNumber}.` 
       };
     }
 

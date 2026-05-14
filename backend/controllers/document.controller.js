@@ -69,6 +69,7 @@ exports.uploadDocument = async (req, res) => {
 
     // ── 3. Run intelligent document validation for identity docs ─────────────
     if (IDENTITY_FIELDS.includes(fieldname)) {
+      console.log(`[documentController] Starting AI validation for ${fieldname}...`);
       const validation = await validateIdentityDocument({
         filePath: localPath,
         mimetype,
@@ -77,6 +78,7 @@ exports.uploadDocument = async (req, res) => {
       });
 
       if (!validation.valid) {
+        console.warn(`[documentController] Validation REJECTED for ${fieldname}: ${validation.message}`);
         fs.existsSync(localPath) && fs.unlinkSync(localPath);
         return res.status(422).json({
           success: false,
@@ -84,6 +86,7 @@ exports.uploadDocument = async (req, res) => {
           validationError: true
         });
       }
+      console.log(`[documentController] Validation SUCCESS for ${fieldname}`);
     }
 
     // ── 4. Image Optimization & Drive Upload ──────────────────────────────────
@@ -132,6 +135,7 @@ exports.uploadDocument = async (req, res) => {
       }
 
       // 4d. Upload to the employee-specific folder
+      console.log(`[documentController] Uploading ${structuredFileName} to Drive folder: ${employeeFolderName}`);
       const driveResult = await driveService.uploadToDrive(
         uploadPath, 
         structuredFileName, 
@@ -140,6 +144,7 @@ exports.uploadDocument = async (req, res) => {
       );
       
       if (driveResult) {
+        console.log(`[documentController] Drive upload successful: ${driveResult.driveId}`);
         fileUrl = driveResult.viewLink;
         driveId = driveResult.driveId;
       } else {

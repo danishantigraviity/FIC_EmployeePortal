@@ -180,7 +180,7 @@ export default function DocumentsPage() {
               { t: 'File Size Limit',      d: 'Each file must be under 5 MB.' },
               { t: 'Accepted Formats',     d: 'JPG, PNG, or PDF only.' },
               { t: 'Identity Validation',  d: 'Aadhaar & PAN are auto-scanned for type and number match.' },
-              { t: 'Original Scans Only',  d: 'No photos of screens, no blurred copies, no wrong documents.' },
+              { t: 'Scanned PDFs',         d: 'If using PDF, ensure it has selectable text. Scanned PDFs should be uploaded as JPG/PNG.' },
             ].map((rule, i) => (
               <div key={i} className="flex items-start gap-4">
                 <div>
