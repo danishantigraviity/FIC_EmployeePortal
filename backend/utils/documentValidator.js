@@ -66,8 +66,10 @@ const p = [
 const inv = [0, 4, 3, 2, 1, 5, 6, 7, 8, 9];
 
 function validateAadhaarChecksum(aadhaar) {
-  const digits = aadhaar.replace(/[\s\-]/g, '').split('').map(Number);
-  if (digits.length !== 12) return false;
+  const clean = aadhaar.replace(/[^0-9]/g, '');
+  if (clean.length !== 12) return false;
+  
+  const digits = clean.split('').map(Number);
   let c = 0;
   const rev = digits.reverse();
   for (let i = 0; i < rev.length; i++) {

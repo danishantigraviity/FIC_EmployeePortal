@@ -1,7 +1,6 @@
 const Document = require('../models/Document.model');
 const { calculateCompletion } = require('../utils/profileCompletion');
 const driveService = require('../services/drive.service');
-const { validateIdentityDocument } = require('../utils/documentValidator');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
