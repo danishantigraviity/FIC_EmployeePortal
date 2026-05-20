@@ -6,7 +6,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 // Using credentials from environment variables
 const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
-const REDIRECT_URI = 'http://localhost'; // Matches your Google Cloud settings
+const REDIRECT_URI = process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost'; // Matches your Google Cloud settings
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error('❌ ERROR: Missing GOOGLE_DRIVE_CLIENT_ID or GOOGLE_DRIVE_CLIENT_SECRET in backend/.env');
