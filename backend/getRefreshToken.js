@@ -46,8 +46,20 @@ const rl = readline.createInterface({
 console.log('');
 rl.question('Paste the code here: ', (code) => {
   rl.close();
-  // If the user pastes the whole URL, extract the code
-  const finalCode = code.includes('code=') ? new URL(code).searchParams.get('code') : code;
+  let finalCode = code.trim();
+  
+  // If they pasted a URL containing code=
+  if (finalCode.includes('code=')) {
+    try {
+      finalCode = new URL(finalCode).searchParams.get('code') || finalCode;
+    } catch (e) {
+      const match = finalCode.match(/code=([^&]+)/);
+      if (match) finalCode = match[1];
+    }
+  }
+  
+  // Clean up any trailing query parameters (e.g. &scope=...)
+  finalCode = finalCode.split('&')[0].trim();
 
   oauth2Client.getToken(finalCode, (err, token) => {
     if (err) {
