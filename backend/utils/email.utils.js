@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { google } = require('googleapis');
-// Trigger deploy
+const nodemailer = require('nodemailer');
 
 const getFrontendUrl = () => {
   const url = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://fic-employee-portal.vercel.app';
@@ -8,22 +8,52 @@ const getFrontendUrl = () => {
 };
 
 const emailUser = (process.env.SMTP_USER || process.env.EMAIL_USER || 'antigraviity.cro@gmail.com').trim();
+const emailPass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').trim();
+const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
+const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
 
-// Gmail API via HTTPS (port 443) — works on Render, no SMTP port issues
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_DRIVE_CLIENT_ID,
-  process.env.GOOGLE_DRIVE_CLIENT_SECRET,
-  process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost'
-);
+// Initialize Gmail API client only if credentials exist
+let gmail = null;
+const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID;
+const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
+const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
 
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN
-});
+const isGmailApiConfigured = 
+  clientId && !clientId.includes('your_client_id') &&
+  clientSecret && !clientSecret.includes('your_client_secret') &&
+  refreshToken && !refreshToken.includes('your_refresh_token');
 
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+if (isGmailApiConfigured) {
+  const oauth2Client = new google.auth.OAuth2(
+    clientId,
+    clientSecret,
+    process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost'
+  );
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+}
+
+// Initialize Nodemailer SMTP transport only if credentials exist
+let smtpTransporter = null;
+const isSmtpConfigured = 
+  emailUser && !emailUser.includes('your_email') &&
+  emailPass && emailPass.length > 0;
+
+if (isSmtpConfigured) {
+  smtpTransporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465, // true for 465, false for other ports
+    auth: {
+      user: emailUser,
+      pass: emailPass,
+    },
+  });
+}
 
 const createRawMessage = (to, subject, html) => {
   const messageParts = [
+    `From: "Forge India" <${emailUser}>`,
     `To: ${to}`,
     'Content-Type: text/html; charset=utf-8',
     'MIME-Version: 1.0',
@@ -31,7 +61,7 @@ const createRawMessage = (to, subject, html) => {
     '',
     html,
   ];
-  const message = messageParts.join('\n');
+  const message = messageParts.join('\r\n');
   return Buffer.from(message)
     .toString('base64')
     .replace(/\+/g, '-')
@@ -40,18 +70,43 @@ const createRawMessage = (to, subject, html) => {
 };
 
 const sendMail = async (to, subject, html) => {
-  try {
-    const raw = createRawMessage(to, subject, html);
-    const res = await gmail.users.messages.send({
-      userId: 'me',
-      requestBody: { raw }
-    });
-    console.log(`✅ Email sent to ${to}. ID: ${res.data.id}`);
-    return true;
-  } catch (err) {
-    console.warn(`⚠️ Email failed for ${to}:`, err.message);
-    return false;
+  // Method 1: Try Gmail API (HTTPS) if configured
+  if (isGmailApiConfigured && gmail) {
+    try {
+      console.log(`📡 Attempting to send email via Gmail API to ${to}...`);
+      const raw = createRawMessage(to, subject, html);
+      const res = await gmail.users.messages.send({
+        userId: 'me',
+        requestBody: { raw }
+      });
+      console.log(`✅ Email sent via Gmail API to ${to}. ID: ${res.data.id}`);
+      return true;
+    } catch (err) {
+      console.warn(`⚠️ Gmail API failed for ${to}:`, err.message);
+      // Fall through to SMTP if SMTP is configured
+    }
   }
+
+  // Method 2: Fallback to SMTP (Nodemailer) if configured
+  if (isSmtpConfigured && smtpTransporter) {
+    try {
+      console.log(`📡 Attempting to send email via SMTP fallback to ${to}...`);
+      const info = await smtpTransporter.sendMail({
+        from: `"Forge India" <${emailUser}>`,
+        to,
+        subject,
+        html,
+      });
+      console.log(`✅ Email sent via SMTP to ${to}. MessageID: ${info.messageId}`);
+      return true;
+    } catch (err) {
+      console.error(`❌ SMTP fallback also failed for ${to}:`, err.message);
+      return false;
+    }
+  }
+
+  console.error(`❌ No email sending method configured or all methods failed. Provide valid Gmail API or SMTP credentials.`);
+  return false;
 };
 
 const EMAIL_LAYOUT = (content) => `
