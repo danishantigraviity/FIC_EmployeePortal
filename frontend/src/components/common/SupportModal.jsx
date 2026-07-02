@@ -157,19 +157,19 @@ export default function SupportModal({ isOpen, onClose }) {
           ) : (
             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="mailto:hr@forgeindia.com" className="p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-blue-200 hover:bg-blue-50/30 transition-all text-center">
+                <a href="mailto:forgeindiaconnectfic@gmail.com" className="p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-blue-200 hover:bg-blue-50/30 transition-all text-center">
                   <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 text-blue-600 group-hover:scale-110 transition-transform">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                   </div>
                   <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Email Support</h4>
-                  <p className="text-[10px] text-slate-400 font-bold">hr@forgeindia.com</p>
+                  <p className="text-[10px] text-slate-400 font-bold">forgeindiaconnectfic@gmail.com</p>
                 </a>
-                <a href="tel:+911234567890" className="p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-blue-200 hover:bg-blue-50/30 transition-all text-center">
+                <a href="tel:+916382099185" className="p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-blue-200 hover:bg-blue-50/30 transition-all text-center">
                   <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 text-emerald-600 group-hover:scale-110 transition-transform">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                   </div>
                   <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Direct Call</h4>
-                  <p className="text-[10px] text-slate-400 font-bold">+91 12345 67890</p>
+                  <p className="text-[10px] text-slate-400 font-bold">+91 63820 99185</p>
                 </a>
               </div>
 
