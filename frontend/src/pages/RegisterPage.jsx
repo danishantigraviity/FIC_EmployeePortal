@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../assets/logo.png';
 import SupportModal from '../components/common/SupportModal';
@@ -10,7 +9,6 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
   const [form, setForm] = useState({ phone: '', password: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState(false);
