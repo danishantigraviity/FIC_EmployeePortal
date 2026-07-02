@@ -10,7 +10,7 @@ router.use(protect);
 router.get('/', async (req, res) => {
   try {
     const userId = req.user.id;
-    const role = req.user.role.toLowerCase();
+    const role = req.user.role ? req.user.role.toLowerCase() : '';
 
     // Fetch notifications matching either:
     // 1. targeted to this specific user (userId matches)
@@ -54,7 +54,7 @@ router.put('/:id/read', async (req, res) => {
 router.put('/read-all', async (req, res) => {
   try {
     const userId = req.user.id;
-    const role = req.user.role.toLowerCase();
+    const role = req.user.role ? req.user.role.toLowerCase() : '';
 
     await Notification.updateMany(
       {
