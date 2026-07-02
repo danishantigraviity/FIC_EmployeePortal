@@ -10,6 +10,8 @@ const {
 const crypto = require('crypto');
 
 exports.createInvite = async (req, res) => {
+  let createdUser = null;
+  let isNew = false;
   try {
     const { name, email, phone, department } = req.body;
     let user = await User.findOne({ email });
@@ -24,6 +26,8 @@ exports.createInvite = async (req, res) => {
 
     const token = uuidv4();
     const expiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    const clientUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://fic-employee-portal.vercel.app').replace(/\/$/, '');
+    const inviteLink = `${clientUrl}/register?token=${token}`;
 
     if (user) {
       user.registrationToken = token;
@@ -31,31 +35,39 @@ exports.createInvite = async (req, res) => {
       user.name = name; // Update name/phone if changed
       user.phone = phone;
       user.department = department;
+      user.inviteLink = inviteLink;
+      user.status = 'invited';
       await user.save();
+      createdUser = user;
     } else {
       user = await User.create({
         name, email, phone, department,
         registrationToken: token,
         registrationTokenExpiry: expiry,
+        inviteLink,
         role: 'employee', status: 'invited'
       });
+      createdUser = user;
+      isNew = true;
     }
 
-    // NON-BLOCKING BACKGROUND EMAIL
-    // We return success to the admin immediately, while sending the email in the background.
-    console.log(`🚀 Triggering background invite email for ${email}...`);
+    // BLOCKING EMAIL SENDING
+    console.log(`🚀 Sending invite email for ${email}...`);
+    const emailSent = await sendRegistrationEmail(email, name, token);
     
-    sendRegistrationEmail(email, name, token).catch(err => {
-      console.error(`❌ Background Email Error for ${email}:`, err.message);
-      // In a real production app, we might log this to a DB or notification service
-    });
+    if (!emailSent) {
+      if (isNew && createdUser) {
+        await User.findByIdAndDelete(createdUser._id);
+      }
+      return res.status(500).json({ success: false, message: 'Failed to send invitation email. Please check your SMTP or Gmail configuration.' });
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Invitation generated successfully. Email is being sent in the background.',
+      message: 'Invitation generated and email sent successfully.',
       data: { 
         userId: user._id, 
-        registrationUrl: `${process.env.CLIENT_URL}/register?token=${token}`,
+        registrationUrl: inviteLink,
         emailWarning: false
       } 
     });

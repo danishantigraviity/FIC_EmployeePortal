@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
   employeeId: { type: String, unique: true, sparse: true },
   joiningDate: { type: Date },
   rejectionReason: { type: String },
+  inviteLink: { type: String }
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

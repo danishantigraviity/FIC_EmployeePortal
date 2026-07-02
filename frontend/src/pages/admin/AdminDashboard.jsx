@@ -35,9 +35,32 @@ export default function AdminDashboard() {
   const [inviteForm, setInviteForm] = useState({ name: '', email: '', phone: '', department: '' });
   const [customDept, setCustomDept] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [showGeneratedLink, setShowGeneratedLink] = useState(false);
+  const [generatedLinkData, setGeneratedLinkData] = useState({ name: '', email: '', link: '' });
   const [showDelete, setShowDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+
+  const copyToClipboard = () => {
+    if (!generatedLinkData.link) return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(generatedLinkData.link)
+        .then(() => toast.success('Link copied to clipboard!'))
+        .catch(() => toast.error('Failed to copy link. Please copy manually.'));
+    } else {
+      const textArea = document.createElement("textarea");
+      textArea.value = generatedLinkData.link;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast.success('Link copied to clipboard!');
+      } catch (err) {
+        toast.error('Failed to copy link.');
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -86,13 +109,17 @@ export default function AdminDashboard() {
       const res = await authAPI.createInvite(payload);
       toast.dismiss(loadingToast);
       
-      if (res.data.emailWarning) {
-        toast.success('Employee added, but email delivery is delayed.');
-      } else {
-        toast.success('Invite sent successfully!');
-      }
+      const inviteLink = res.data?.data?.registrationUrl || '';
       
       setShowInvite(false);
+      setGeneratedLinkData({
+        name: payload.name,
+        email: payload.email,
+        link: inviteLink
+      });
+      setShowGeneratedLink(true);
+
+      toast.success('Invite sent and onboarding link generated successfully.');
       setInviteForm({ name: '', email: '', phone: '', department: '' });
       setCustomDept('');
       loadData();
@@ -481,6 +508,91 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Onboarding Link Generated Success Modal */}
+      {showGeneratedLink && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] shadow-[0_40px_100px_-20px_rgba(13,43,107,0.15)] w-full max-w-[440px] animate-in zoom-in-95 duration-200 overflow-hidden">
+            {/* Modal Header with Branding */}
+            <div className="bg-[#0D2B6B] px-8 py-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400/10 rounded-full -ml-12 -mb-12 blur-xl" />
+              
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="p-2 bg-white rounded-xl shadow-lg mb-4">
+                  <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+                </div>
+                <h3 className="text-xl font-bold text-white tracking-tight font-poppins">Onboarding Link Generated</h3>
+                <p className="text-blue-200/50 text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5 font-poppins">Secure Invitation Link</p>
+              </div>
+
+              <button 
+                onClick={() => setShowGeneratedLink(false)} 
+                className="absolute top-4 right-4 p-2 text-white/30 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            
+            <div className="p-8 sm:p-10 space-y-6">
+              <div>
+                <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Employee Details</label>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                  <div className="text-sm font-bold text-slate-800">{generatedLinkData.name}</div>
+                  <div className="text-xs font-semibold text-slate-500">{generatedLinkData.email}</div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Secure Onboarding Link</label>
+                <div className="relative group">
+                  <input 
+                    type="text" 
+                    readOnly
+                    value={generatedLinkData.link}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-4 pr-12 py-3.5 text-xs font-bold text-slate-700 outline-none transition-all"
+                  />
+                  <button
+                    onClick={copyToClipboard}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                    title="Copy Link"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={copyToClipboard}
+                    className="py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] border border-slate-200 text-slate-700 hover:bg-slate-50 transition-all font-poppins flex items-center justify-center gap-2"
+                  >
+                    Copy Link
+                  </button>
+                  <a 
+                    href={generatedLinkData.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] text-white transition-all text-center flex items-center justify-center gap-2"
+                    style={{ background: 'linear-gradient(135deg, #0D2B6B, #1A4FA0)' }}
+                  >
+                    Open Link
+                  </a>
+                </div>
+                
+                <button 
+                  onClick={() => setShowGeneratedLink(false)}
+                  className="w-full py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all font-poppins text-center"
+                >
+                  Cancel / Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation */}
       <ConfirmModal 
         isOpen={showDelete}
