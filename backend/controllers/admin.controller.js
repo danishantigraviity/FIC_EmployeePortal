@@ -86,16 +86,31 @@ exports.verifyUser = async (req, res) => {
     });
 
     // Send email non-blocking — never delay or crash the response
+    const { sendNotification } = require('../utils/socket');
     if (status === 'approved') {
       console.log(`📧 Sending approval email to ${user.email}...`);
       sendApprovalEmail(user.email, user.name)
         .then(() => console.log(`✅ Approval email sent to ${user.email}`))
         .catch(e => console.warn(`⚠️ Approval email failed for ${user.email}:`, e.message));
+
+      await sendNotification({
+        title: 'Profile Approved',
+        message: 'Your onboarding profile has been approved successfully.',
+        type: 'approval',
+        userId: user._id
+      });
     } else if (status === 'rejected') {
       console.log(`📧 Sending rejection email to ${user.email}...`);
       sendRejectionEmail(user.email, user.name, rejectionReason)
         .then(() => console.log(`✅ Rejection email sent to ${user.email}`))
         .catch(e => console.warn(`⚠️ Rejection email failed for ${user.email}:`, e.message));
+
+      await sendNotification({
+        title: 'Profile Rejected',
+        message: `Your onboarding profile was rejected: ${rejectionReason}`,
+        type: 'rejection',
+        userId: user._id
+      });
     }
 
     res.json({ success: true, data: user, message: `Employee ${status} successfully` });

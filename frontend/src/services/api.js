@@ -144,4 +144,10 @@ export const adminAPI = {
   deleteUser: (id) => api.delete(`/admin/user/${id}`),
 };
 
+export const notificationAPI = {
+  getAll: () => api.get('/notifications'),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/read-all'),
+};
+
 export default api;

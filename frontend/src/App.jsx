@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 
 // Auth pages (Lazy loaded)
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -79,48 +80,50 @@ const RootRedirect = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: { fontFamily: 'DM Sans, sans-serif', fontSize: '13px', borderRadius: '12px' },
-            success: { iconTheme: { primary: '#1A4FA0', secondary: '#fff' } },
-          }}
-        />
-        <Suspense fallback={<Spinner />}>
-          <Routes>
-            {/* Public */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+      <SocketProvider>
+        <BrowserRouter>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: { fontFamily: 'DM Sans, sans-serif', fontSize: '13px', borderRadius: '12px' },
+              success: { iconTheme: { primary: '#1A4FA0', secondary: '#fff' } },
+            }}
+          />
+          <Suspense fallback={<Spinner />}>
+            <Routes>
+              {/* Public */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Root → smart redirect */}
-            <Route path="/" element={<RootRedirect />} />
+              {/* Root → smart redirect */}
+              <Route path="/" element={<RootRedirect />} />
 
-            {/* ── ADMIN DASHBOARD ── */}
-            <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="employees" element={<AdminEmployees />} />
-              <Route path="employees/:id" element={<AdminEmployeeDetail />} />
-              <Route path="approvals" element={<AdminApprovals />} />
-            </Route>
+              {/* ── ADMIN DASHBOARD ── */}
+              <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="employees" element={<AdminEmployees />} />
+                <Route path="employees/:id" element={<AdminEmployeeDetail />} />
+                <Route path="approvals" element={<AdminApprovals />} />
+              </Route>
 
-            {/* ── EMPLOYEE ONBOARDING ── */}
-            <Route path="/onboarding" element={<EmployeeGuard><OnboardingLayout /></EmployeeGuard>}>
-              <Route index element={<OnboardingHome />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="education" element={<EducationPage />} />
-              <Route path="experience" element={<ExperiencePage />} />
-              <Route path="documents" element={<DocumentsPage />} />
-              <Route path="bank" element={<BankDetailsPage />} />
-            </Route>
+              {/* ── EMPLOYEE ONBOARDING ── */}
+              <Route path="/onboarding" element={<EmployeeGuard><OnboardingLayout /></EmployeeGuard>}>
+                <Route index element={<OnboardingHome />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="education" element={<EducationPage />} />
+                <Route path="experience" element={<ExperiencePage />} />
+                <Route path="documents" element={<DocumentsPage />} />
+                <Route path="bank" element={<BankDetailsPage />} />
+              </Route>
 
-            {/* Catch-all */}
-            <Route path="*" element={<RootRedirect />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+              {/* Catch-all */}
+              <Route path="*" element={<RootRedirect />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }

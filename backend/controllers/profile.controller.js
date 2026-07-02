@@ -68,6 +68,15 @@ exports.submitOnboarding = async (req, res) => {
       { new: true }
     );
 
+    // Send Real-Time Notification to Admins
+    const { sendNotification } = require('../utils/socket');
+    await sendNotification({
+      title: 'Onboarding Profile Submitted',
+      message: `${user.name} (${user.email}) has completed onboarding and submitted their profile for approval.`,
+      type: 'approval',
+      role: 'admin'
+    });
+
     res.json({ success: true, message: 'Profile submitted successfully for HR review.', status: user.status });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };

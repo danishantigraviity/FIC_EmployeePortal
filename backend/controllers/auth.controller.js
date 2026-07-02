@@ -62,6 +62,15 @@ exports.createInvite = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to send invitation email. Please check your SMTP or Gmail configuration.' });
     }
 
+    // Send Real-Time Notification to Admins
+    const { sendNotification } = require('../utils/socket');
+    await sendNotification({
+      title: 'Employee Invitation Sent',
+      message: `An invitation was successfully sent to ${name} (${email}) for the ${department} department.`,
+      type: 'invite',
+      role: 'admin'
+    });
+
     res.status(200).json({
       success: true,
       message: 'Invitation generated and email sent successfully.',
@@ -102,6 +111,15 @@ exports.register = async (req, res) => {
     user.registrationToken = undefined;
     user.registrationTokenExpiry = undefined;
     await user.save();
+
+    // Send Real-Time Notification to Admins
+    const { sendNotification } = require('../utils/socket');
+    await sendNotification({
+      title: 'Registration Completed',
+      message: `${user.name} (${user.email}) has completed their account registration and set up their password.`,
+      type: 'registration',
+      role: 'admin'
+    });
 
     sendTokens(user, 201, res);
   } catch (err) {

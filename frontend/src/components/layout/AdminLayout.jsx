@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../../assets/logo.png';
+import NotificationBell from '../common/NotificationBell';
 
 const Logo = ({ size = 36 }) => (
   <img src={logoImg} alt="Forge India Logo" className="rounded-lg shadow-sm" style={{ width: size, height: size, objectFit: 'contain', background: 'white' }} />
@@ -126,7 +127,8 @@ export default function AdminLayout() {
             </button>
             <div className="font-poppins text-lg font-bold text-gray-800 tracking-tight">{pageTitle}</div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <NotificationBell />
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm transition-transform hover:scale-105"
               style={{ background: 'linear-gradient(135deg, #0D2B6B, #1A4FA0)', color: '#F5C518' }}>
               {user?.name?.charAt(0)?.toUpperCase()}

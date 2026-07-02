@@ -18,6 +18,7 @@ const educationRoutes = require('./routes/education.routes');
 const experienceRoutes = require('./routes/experience.routes');
 const documentRoutes = require('./routes/document.routes');
 const adminRoutes = require('./routes/admin.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 
 const app = express();
@@ -118,6 +119,7 @@ app.use('/api/education', educationRoutes);
 app.use('/api/experience', experienceRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 // Health check
@@ -159,7 +161,7 @@ const connectDB = async () => {
 
 // Start Server immediately so Render can detect the port
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
   // Connect to MongoDB in background after server is up
   connectDB().catch(err => {
@@ -167,5 +169,9 @@ app.listen(PORT, () => {
     console.log('⚠️ Server is running but DB is not connected. Retrying on next request...');
   });
 });
+
+// Initialize Socket.IO
+const { initSocket } = require('./utils/socket');
+initSocket(server, allowedOrigins);
 
 module.exports = app;

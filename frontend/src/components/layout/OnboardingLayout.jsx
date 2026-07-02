@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import logoImg from '../../assets/logo.png';
 import SupportModal from '../common/SupportModal';
+import NotificationBell from '../common/NotificationBell';
 
 const STEPS = [
   { step: 1, label: 'Personal Profile',   sub: 'Basic & address info',   path: '/onboarding/profile', icon: '👤' },
@@ -195,6 +196,7 @@ export default function OnboardingLayout() {
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               HR Support
             </button>
+            <NotificationBell />
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <div className="text-xs font-bold text-slate-800">{user?.name}</div>
