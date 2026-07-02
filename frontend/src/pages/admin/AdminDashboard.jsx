@@ -382,6 +382,7 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+          </div>
           <div className="p-4 bg-gray-50/50 border-t border-gray-50">
             <Link to="/admin/activity-logs" className="block text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-blue-600 transition">View All Audit Logs</Link>
           </div>
