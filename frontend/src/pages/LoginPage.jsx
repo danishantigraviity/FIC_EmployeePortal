@@ -92,43 +92,45 @@ export default function LoginPage() {
       </div>
 
       {/* ── RIGHT PANEL (LOGIN CARD) ── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 relative overflow-hidden bg-slate-50/50">
         {/* Subtle background blobs for visual depth */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-[100px] -mr-48 -mt-48" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-slate-100 rounded-full blur-[80px] -ml-40 -mb-40" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/40 rounded-full blur-[100px] -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-slate-100/50 rounded-full blur-[80px] -ml-40 -mb-40" />
         
-        <div className="w-full max-w-[480px] relative">
-          <div className="bg-white rounded-[32px] shadow-[0_32px_80px_-16px_rgba(13,43,107,0.12)] p-10 sm:p-14 border border-slate-50 transition-all hover:shadow-[0_40px_100px_-20px_rgba(13,43,107,0.15)]">
+        <div className="w-full max-w-[420px] relative z-10">
+          <div className="bg-white rounded-3xl shadow-[0_20px_50px_-12px_rgba(13,43,107,0.08)] p-8 sm:p-10 border border-slate-100/80 transition-all duration-300">
             {/* Mobile Branding */}
-            <div className="lg:hidden flex flex-col items-center mb-12">
-              <div className="p-2 bg-white rounded-xl shadow-lg border border-slate-100 mb-4">
+            <div className="lg:hidden flex flex-col items-center mb-8">
+              <div className="p-2.5 bg-white rounded-2xl shadow-md border border-slate-100 mb-3">
                 <img src={logoImg} alt="Logo" className="w-8 h-8 object-contain" />
               </div>
-              <span className="text-xl font-black tracking-tighter text-[#0D2B6B]">FORGE<span className="text-[#F5C518]">INDIA</span></span>
+              <span className="text-lg font-black tracking-tighter text-[#0D2B6B]">FORGE<span className="text-[#F5C518]">INDIA</span></span>
             </div>
 
-            <div className="mb-12">
-              <h2 className="text-3xl font-bold font-poppins tracking-tight text-slate-900">
-                <span style={{ color: '#0D2B6B' }}>Welcome</span> <span style={{ color: '#F5C518' }}>back</span>
+            <div className="mb-8 text-center sm:text-left">
+              <h2 className="text-3xl font-extrabold font-poppins tracking-tight text-[#0D2B6B]">
+                Welcome <span className="text-[#F5C518]">back</span>
               </h2>
-              <p className="text-slate-400 text-sm mt-3 font-medium">Access your enterprise dashboard to manage operations.</p>
+              <p className="text-slate-500 text-xs sm:text-sm mt-2.5 font-semibold leading-relaxed">
+                Access your enterprise dashboard to manage operations.
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-7">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="group">
-                <div className="flex items-center justify-between mb-2.5 px-1">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Email Address</label>
-                  <span className="text-[10px] text-blue-500 font-bold opacity-0 group-focus-within:opacity-100 transition-opacity">Work Email</span>
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email Address</label>
+                  <span className="text-[9px] text-[#0D2B6B] font-bold opacity-0 group-focus-within:opacity-100 transition-opacity">Work Email</span>
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0D2B6B] transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
                   </div>
                   <input 
                     type="email" 
                     value={form.email} 
                     onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-11 pr-5 py-4 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-slate-300 placeholder:font-normal" 
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-[#0D2B6B] focus:ring-4 focus:ring-blue-50/50 transition-all placeholder:text-slate-300" 
                     placeholder="name@company.com" 
                     required 
                   />
@@ -136,27 +138,27 @@ export default function LoginPage() {
               </div>
 
               <div className="group">
-                <div className="flex items-center justify-between mb-2.5 px-1">
-                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Password</label>
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Password</label>
                   <Link to="/forgot-password" title="Recover your password" 
-                        className="text-[11px] font-black text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-widest">Forgot?</Link>
+                        className="text-[10px] font-black text-[#0D2B6B] hover:text-blue-600 transition-colors uppercase tracking-widest">Forgot?</Link>
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-blue-600 transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#0D2B6B] transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                   </div>
                   <input 
                     type={showPass ? "text" : "password"} 
                     value={form.password} 
                     onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-11 pr-12 py-4 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-50 transition-all placeholder:text-slate-300 placeholder:font-normal" 
+                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-11 pr-11 py-3 text-sm font-semibold text-slate-700 outline-none focus:bg-white focus:border-[#0D2B6B] focus:ring-4 focus:ring-blue-50/50 transition-all placeholder:text-slate-300" 
                     placeholder="••••••••" 
                     required 
                   />
                   <button 
                     type="button" 
                     onClick={() => setShowPass(!showPass)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0D2B6B] transition-colors p-1"
                   >
                     {showPass ? (
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
@@ -170,32 +172,32 @@ export default function LoginPage() {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-4.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-white transition-all transform active:scale-[0.98] shadow-2xl shadow-blue-900/20 hover:shadow-blue-900/40 disabled:opacity-70 flex items-center justify-center gap-3 group/btn relative overflow-hidden"
+                className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] text-white transition-all duration-300 shadow-md shadow-blue-900/10 hover:shadow-blue-900/20 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2 group/btn relative overflow-hidden"
                 style={{ background: 'linear-gradient(135deg, #0D2B6B, #1A4FA0)' }}
               >
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     AUTHENTICATING...
                   </>
                 ) : (
                   <>
                     SIGN IN TO PORTAL
-                    <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    <svg className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-12 pt-10 border-t border-slate-50 text-center">
+            <div className="mt-8 pt-6 border-t border-slate-100 text-center">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-                Trouble signing in? <button onClick={() => setShowSupport(true)} className="text-blue-600 hover:text-blue-700 transition-colors">HR Support</button>
+                Trouble signing in? <button onClick={() => setShowSupport(true)} className="text-[#0D2B6B] hover:text-blue-600 font-black transition-colors">HR Support</button>
               </p>
             </div>
           </div>
           
-          <div className="mt-10 text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.3em]">
+          <div className="mt-8 text-center text-[9px] text-slate-400/80 font-black uppercase tracking-[0.25em]">
             Protected by FIC Advanced Security Shield
           </div>
         </div>
