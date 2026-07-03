@@ -66,6 +66,31 @@ const sendNotification = async ({ title, message, type, role, userId }) => {
       }
     }
 
+    // 3. Dispatch Web Push Notification
+    try {
+      const { sendPushNotification } = require('../services/push.service');
+      const url = role === 'admin' ? '/admin' : '/onboarding';
+
+      if (userId) {
+        await sendPushNotification(userId.toString(), { title, message, url, type });
+      } else {
+        const User = require('../models/User.model');
+        let targetUsers = [];
+        if (role) {
+          targetUsers = await User.find({ role: role.toLowerCase() }, '_id');
+        } else {
+          targetUsers = await User.find({}, '_id');
+        }
+
+        const pushPromises = targetUsers.map(u => 
+          sendPushNotification(u._id.toString(), { title, message, url, type })
+        );
+        await Promise.all(pushPromises);
+      }
+    } catch (pushErr) {
+      console.error('❌ Failed to dispatch push notifications:', pushErr.message);
+    }
+
     return notification;
   } catch (err) {
     console.error('❌ Error sending notification:', err.message);

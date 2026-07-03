@@ -61,6 +61,11 @@ export const SocketProvider = ({ children }) => {
         userId: user.id || user._id,
         role: user.role
       });
+
+      // Register browser Web Push notifications
+      import('../services/pushUtility')
+        .then(({ registerPushNotifications }) => registerPushNotifications())
+        .catch(err => console.error('Failed to register Web Push:', err));
     });
 
     newSocket.on('notification:new', (notification) => {

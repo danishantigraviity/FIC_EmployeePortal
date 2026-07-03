@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { adminAPI, authAPI } from '../../services/api';
+import api, { adminAPI, authAPI } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import Select from '../../components/common/Select';
 import ConfirmModal from '../../components/common/ConfirmModal';
@@ -26,6 +26,21 @@ const StatCard = ({ label, value, color, sub }) => (
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+
+  const triggerTestPush = async (type) => {
+    try {
+      const { data } = await api.post('/notifications/test-trigger', { type });
+      if (data.success) {
+        toast.success(`Triggered test push: ${type}`);
+      } else {
+        toast.error('Failed to trigger push');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to trigger notification: ' + err.message);
+    }
+  };
+
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0, invited: 0 });
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -604,6 +619,39 @@ export default function AdminDashboard() {
         confirmText={deleting ? "Purging..." : "Confirm Delete"}
         type="danger"
       />
+
+      {/* ── Push Notification Testing Panel ── */}
+      <div className="mt-8 p-6 rounded-[24px] bg-slate-50 border border-slate-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-900 text-sm">🔔 Desktop Push Notifications Testing</h4>
+            <p className="text-slate-500 text-xs mt-0.5">Test real-time native desktop pushes (works minimized/in other tabs) & in-app toast alerts</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'New Email', type: 'email' },
+            { label: 'Meeting Summary', type: 'meeting' },
+            { label: 'HR Alert', type: 'alert' },
+            { label: 'Invite Sent', type: 'invite' },
+            { label: 'Registration Completed', type: 'registration' },
+            { label: 'Profile Approved', type: 'approval' },
+            { label: 'Profile Rejected', type: 'rejection' }
+          ].map((btn) => (
+            <button
+              key={btn.type}
+              onClick={() => triggerTestPush(btn.type)}
+              className="px-3 py-2.5 bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 rounded-xl text-xs font-bold text-slate-700 transition-all text-center flex items-center justify-center shadow-sm"
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
