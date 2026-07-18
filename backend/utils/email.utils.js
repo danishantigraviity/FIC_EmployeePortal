@@ -48,6 +48,9 @@ if (isSmtpConfigured) {
       user: emailUser,
       pass: emailPass,
     },
+    connectionTimeout: 5000, // 5 seconds
+    greetingTimeout: 5000,   // 5 seconds
+    socketTimeout: 8000,     // 8 seconds
   });
 }
 
@@ -78,6 +81,8 @@ const sendMail = async (to, subject, html) => {
       const res = await gmail.users.messages.send({
         userId: 'me',
         requestBody: { raw }
+      }, {
+        timeout: 5000 // 5 seconds timeout
       });
       console.log(`✅ Email sent via Gmail API to ${to}. ID: ${res.data.id}`);
       return true;
