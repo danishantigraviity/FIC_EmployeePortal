@@ -27,7 +27,7 @@ if (isGmailApiConfigured) {
   const oauth2Client = new google.auth.OAuth2(
     clientId,
     clientSecret,
-    process.env.GOOGLE_DRIVE_REDIRECT_URI || 'http://localhost'
+    process.env.GOOGLE_DRIVE_REDIRECT_URI || process.env.CLIENT_URL || 'http://localhost'
   );
   oauth2Client.setCredentials({ refresh_token: refreshToken });
   gmail = google.gmail({ version: 'v1', auth: oauth2Client });
@@ -88,6 +88,10 @@ const sendMail = async (to, subject, html) => {
       return true;
     } catch (err) {
       console.warn(`⚠️ Gmail API failed for ${to}:`, err.message);
+      if (err.message.includes('invalid_grant')) {
+        console.error('👉 CAUSE: The OAuth2 Refresh Token is invalid, expired, or has been revoked.');
+        console.error('👉 FIX: Run "node backend/getRefreshToken.js" locally to generate a new token, or update GOOGLE_DRIVE_REFRESH_TOKEN in your env variables.');
+      }
       // Fall through to SMTP if SMTP is configured
     }
   }

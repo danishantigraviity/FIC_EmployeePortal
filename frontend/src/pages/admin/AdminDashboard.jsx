@@ -125,7 +125,6 @@ export default function AdminDashboard() {
       toast.dismiss(loadingToast);
       
       const inviteLink = res.data?.data?.registrationUrl || '';
-      const emailWarning = res.data?.data?.emailWarning || false;
       
       setShowInvite(false);
       setGeneratedLinkData({
@@ -135,11 +134,7 @@ export default function AdminDashboard() {
       });
       setShowGeneratedLink(true);
 
-      if (emailWarning) {
-        toast.error('Invitation link generated, but the email failed to send. Please share the link manually.', { duration: 6000 });
-      } else {
-        toast.success('Invite sent and onboarding link generated successfully.');
-      }
+      toast.success('Invite sent and onboarding link generated successfully.');
       setInviteForm({ name: '', email: '', phone: '', department: '' });
       setCustomDept('');
       loadData();

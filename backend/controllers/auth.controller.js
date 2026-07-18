@@ -51,36 +51,33 @@ exports.createInvite = async (req, res) => {
       isNew = true;
     }
 
-    // EMAIL SENDING (WITH FAST TIMEOUT OR WARNING INSTEAD OF 500/DELETE)
+    // EMAIL SENDING (WITH FAST SMTP TIMEOUTS)
     console.log(`🚀 Sending invite email for ${email}...`);
     const emailSent = await sendRegistrationEmail(email, name, token);
     
-    let emailWarning = false;
     if (!emailSent) {
-      emailWarning = true;
-      console.warn(`⚠️ Invitation email failed to send to ${email}. Invitation link is still active.`);
+      if (isNew && createdUser) {
+        await User.findByIdAndDelete(createdUser._id);
+      }
+      return res.status(500).json({ success: false, message: 'Failed to send invitation email. Please check your SMTP or Gmail configuration.' });
     }
 
     // Send Real-Time Notification to Admins
     const { sendNotification } = require('../utils/socket');
     await sendNotification({
-      title: emailWarning ? 'Employee Invitation (Email Failed)' : 'Employee Invitation Sent',
-      message: emailWarning 
-        ? `Invitation link generated for ${name} (${email}) but the notification email failed to deliver. Please share the link manually.`
-        : `An invitation was successfully sent to ${name} (${email}) for the ${department} department.`,
+      title: 'Employee Invitation Sent',
+      message: `An invitation was successfully sent to ${name} (${email}) for the ${department} department.`,
       type: 'invite',
       role: 'admin'
     });
 
     res.status(200).json({
       success: true,
-      message: emailWarning 
-        ? 'Invitation generated, but invitation email failed to send.' 
-        : 'Invitation generated and email sent successfully.',
+      message: 'Invitation generated and email sent successfully.',
       data: { 
         userId: user._id, 
         registrationUrl: inviteLink,
-        emailWarning: emailWarning
+        emailWarning: false
       } 
     });
   } catch (err) {

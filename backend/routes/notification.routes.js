@@ -82,9 +82,9 @@ const { sendNotification } = require('../utils/socket');
 router.get('/vapid-public-key', (req, res) => {
   const key = process.env.VAPID_PUBLIC_KEY;
   if (!key) {
-    return res.status(404).json({ success: false, message: 'VAPID public key not configured' });
+    return res.json({ success: true, enabled: false, vapidPublicKey: null });
   }
-  res.json({ success: true, vapidPublicKey: key });
+  res.json({ success: true, enabled: true, vapidPublicKey: key });
 });
 
 // POST /api/notifications/subscribe

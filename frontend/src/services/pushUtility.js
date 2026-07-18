@@ -45,8 +45,9 @@ export const registerPushNotifications = async () => {
     // 3. Get VAPID public key from backend
     console.log('🔑 Fetching VAPID public key from backend...');
     const { data: keyData } = await api.get('/notifications/vapid-public-key');
-    if (!keyData || !keyData.vapidPublicKey) {
-      throw new Error('Could not retrieve VAPID public key');
+    if (!keyData || keyData.enabled === false || !keyData.vapidPublicKey) {
+      console.log('ℹ️ Web Push notifications are disabled (VAPID key not configured).');
+      return;
     }
 
     // 4. Subscribe the user via PushManager
